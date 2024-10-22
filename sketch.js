@@ -80,12 +80,12 @@ class Cassette {
     );
   }
 
-  addPixelsLeft() {
-    this.spoolLeft.addPixels();
+  addPixelsLeft(c) {
+    this.spoolLeft.addPixels(c);
   }
 
-  addPixelsRight() {
-    this.spoolLeft.addPixels();
+  addPixelsRight(c) {
+    this.spoolLeft.addPixels(c);
   }
 
   tick() {
@@ -161,25 +161,24 @@ class Leg {
   }
 
   addPixels() {
-    this.queue += 1;
+    this.queue += 8; // 8 pixels per input
   }
 
   tick() {
-    this.i++;
-
     if (this.queue > 0) {
       this.queue--;
-      const c = random(colorInput);
+
+      // 2 pixels in a row of each color per input
+      const c = colorInput[Math.floor(this.i / 2)];
       this.pixelColors.unshift(color(c));
+      this.i = (this.i + 1) % 8;
     } else {
       this.pixelColors.unshift(lightOff);
     }
 
     // last pixel should move up onto spool
     const p = this.pixelColors.pop();
-    if (p.toString() != lightOff.toString()) {
-      this.edgeCallback();
-    }
+    this.edgeCallback(p);
   }
 
   draw() {
@@ -215,20 +214,17 @@ class Spool {
     this.pixels = this.generatePixels();
     this.pixelColors = this.pixels.map((_) => lightOff);
 
-    this.i = 0;
-    this.queue = 0;
+    this.queue = [];
   }
 
-  addPixels() {
-    this.queue++;
+  addPixels(c) {
+    this.queue.push(c);
   }
 
   tick() {
-    this.i++;
-
-    if (this.queue > 0) {
-      this.queue--;
-      this.pixelColors.unshift(colorFinal);
+    if (this.queue.length > 0) {
+      let c = this.queue.shift();
+      this.pixelColors.unshift(c);
     } else {
       this.pixelColors.unshift(lightOff);
     }
