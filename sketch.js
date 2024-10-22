@@ -220,6 +220,10 @@ class Spool {
     this.pixelColors = this.pixels.map((_) => lightOff);
 
     this.queue = [];
+
+    this.circleNum = 0;
+    this.pixelsCounter = 0;
+    this.pixelsPerCircle = 30;
   }
 
   addPixels(c) {
@@ -240,6 +244,28 @@ class Spool {
       pixel.setColor(this.pixelColors[i]);
       pixel.draw();
     });
+    this.checkAndDrawCircles();
+  }
+
+  checkAndDrawCircles() {
+    // Check if the last pixel in the array has reached the center of the spool
+    if (this.pixels[this.pixels.length - 1].color !== lightOff) {
+      this.pixelsCounter++;
+    }
+
+    if (this.pixelsCounter >= this.pixelsPerCircle) {
+      this.circleNum++
+      this.pixelsPerCircle += 20;
+      this.pixelsCounter = 0;
+    }
+
+    // Draw circles from largest to smallest (reverse order)
+    for (let i = this.circleNum - 1; i >= 0; i--) {
+      fill(colorInput[i % colorInput.length]);
+      stroke(33);
+      // increate the radius of the circle by 25 for each circle
+      circle(this.x, this.y, this.radius + i * 25);
+    }
   }
 
   generatePixels() {
