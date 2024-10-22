@@ -4,7 +4,7 @@ let cassette;
 let speedSlider;
 let lastTick = 0;
 
-let r = 12;
+let r = 11;
 let lightOff, colorFinal;
 let colorInput = [];
 
@@ -15,11 +15,12 @@ function preload() {
 function setup() {
   createCanvas(800, 600);
 
-  lightOff = color(220, 220, 220);
-  colorFinal = color(154, 54, 255);
-  colorInput = ["#3b79f5", "#7b6af7", "#d9a1ff", "#ff4af9", "#ff2672"];
+  lightOff = color("#b8b8b8");
+  lightOff.setAlpha(32);
+  colorFinal = color("#894CE0");
+  colorInput = ["#8D7EFC", "#BE94FF", "#CD6EFF", "#FFA9FF"];
 
-  cassette = new Cassette(50, 50, 600, 385);
+  cassette = new Cassette(50, 50, 600, 376);
 
   speedSlider = createSlider(10, 500, 100, 10);
 
@@ -33,7 +34,6 @@ function draw() {
   text("Press 'P' to add joy pixels", 10, 10);
 
   if (millis() - lastTick >= speedSlider.value()) {
-    // cassette.legLeft.addPixels();
     cassette.tick();
     lastTick = millis();
   }
@@ -60,24 +60,22 @@ class Cassette {
     this.borderPixels = this.generateBorderPixels();
     this.borderColors = this.borderPixels.map((_) => colorFinal);
 
-    let spoolY = y + h / 2 + 24;
-    let spoolX1 = x + 179;
-    let spoolX2 = x + 432;
+    let spoolY = y + h / 2 - 23;
+    let spoolX1 = x + 170;
+    let spoolX2 = x + 420;
     this.spoolLeft = new Spool(spoolX1, spoolY, this.y + this.h);
     this.spoolRight = new Spool(spoolX2, spoolY, this.y + this.h);
 
     this.legLeft = new Leg(
       spoolX1,
       this.y + this.h,
-      100,
-      150,
+      75,
       this.addPixelsLeft.bind(this)
     );
     this.legRight = new Leg(
       spoolX2,
       this.y + this.h,
-      100,
-      150,
+      75,
       this.addPixelsRight.bind(this)
     );
   }
@@ -149,10 +147,9 @@ class Cassette {
 }
 
 class Leg {
-  constructor(cx, yTop, w, h, edgeCallback) {
+  constructor(cx, yTop, h, edgeCallback) {
     this.cx = cx;
     this.yTop = yTop;
-    this.w = w;
     this.h = h;
 
     this.pixels = this.generatePixels();
@@ -186,10 +183,6 @@ class Leg {
   }
 
   draw() {
-    stroke(0);
-    fill(255);
-    rect(this.cx - this.w / 2, this.yTop, this.w, this.h);
-
     this.pixels.forEach((pixel, i) => {
       pixel.setColor(this.pixelColors[i]);
       pixel.draw();
@@ -212,8 +205,9 @@ class Spool {
     this.cassetteBorderBottom = borderBottom;
 
     // spiral parameters
-    this.angle = 0;
-    this.initialRadius = 40;
+    // lmao magic numbers
+    this.angle = 1.13;
+    this.initialRadius = 43;
     this.radius = this.initialRadius;
     this.spacing = 10.02;
     this.numPixels = 280;
@@ -231,7 +225,6 @@ class Spool {
 
   tick() {
     this.i++;
-    // this.pixelColors.unshift(this.pixelColors.pop());
 
     if (this.queue > 0) {
       this.queue--;
