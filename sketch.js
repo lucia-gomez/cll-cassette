@@ -4,7 +4,7 @@ let cassette;
 let speedSlider;
 let lastTick = 0;
 
-let r = 11;
+let r = 12;
 let lightOff, colorFinal;
 let colorInput = [];
 
@@ -18,19 +18,19 @@ function setup() {
   lightOff = color("#b8b8b8");
   lightOff.setAlpha(32);
   colorFinal = color("#894CE0");
-  colorInput = ["#8D7EFC", "#BE94FF", "#CD6EFF", "#FFA9FF"];
+  colorInput = ["#8D7EFC", "#BE94FF", "#CD6EFF", "#FFA9FF", "#FFF"];
 
   cassette = new Cassette(50, 50, 600, 376);
 
-  speedSlider = createSlider(10, 500, 100, 10);
+  speedSlider = createSlider(5, 200, 80, 10);
 
   textAlign(LEFT, TOP);
   textSize(16);
 }
 
 function draw() {
-  background(255);
-  fill("black");
+  background(20);
+  fill("white");
   text("Press 'P' to add joy pixels", 10, 10);
 
   if (millis() - lastTick >= speedSlider.value()) {
@@ -126,21 +126,22 @@ class Cassette {
   generateBorderPixels() {
     const p = [];
 
+    let m = 12; // margin
     // top row from left
-    for (let i = this.x; i < this.x + this.w; i += r) {
-      p.push(new Pixel(i, this.y));
+    for (let i = this.x + m; i < this.x + this.w - m; i += r) {
+      p.push(new Pixel(i, this.y + m));
     }
     // right side from top
-    for (let i = this.y; i < this.y + this.h - r; i += r) {
-      p.push(new Pixel(this.x + this.w, i));
+    for (let i = this.y + m; i < this.y + this.h - r; i += r) {
+      p.push(new Pixel(this.x + this.w - m, i));
     }
     // bottom row from right
-    for (let i = this.x + this.w; i > this.x; i -= r) {
-      p.push(new Pixel(i, this.y + this.h));
+    for (let i = this.x + this.w - m; i > this.x + m; i -= r) {
+      p.push(new Pixel(i, this.y + this.h - m));
     }
     // left side from bottom
-    for (let i = this.y + this.h; i > this.y + r; i -= r) {
-      p.push(new Pixel(this.x, i));
+    for (let i = this.y + this.h - m; i > this.y + r; i -= r) {
+      p.push(new Pixel(this.x + m, i));
     }
     return p;
   }
@@ -161,7 +162,7 @@ class Leg {
   }
 
   addPixels() {
-    this.queue += 8; // 8 pixels per input
+    this.queue += colorInput.length * 2; // pixels per input
   }
 
   tick() {
@@ -171,7 +172,7 @@ class Leg {
       // 2 pixels in a row of each color per input
       const c = colorInput[Math.floor(this.i / 2)];
       this.pixelColors.unshift(color(c));
-      this.i = (this.i + 1) % 8;
+      this.i = (this.i + 1) % (colorInput.length * 2);
     } else {
       this.pixelColors.unshift(lightOff);
     }
@@ -277,6 +278,6 @@ class Pixel {
   draw() {
     noStroke();
     fill(this.color);
-    circle(this.x, this.y, 12);
+    circle(this.x, this.y, r);
   }
 }
