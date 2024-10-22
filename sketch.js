@@ -4,7 +4,9 @@ let cassette;
 let speedSlider;
 let lastTick = 0;
 
-let r = 12;
+const r = 12;
+const PIXEL_COLOR_PER_INPUT = 2; // number of each color pixel in 1 input chunk
+
 let lightOff, colorFinal;
 let colorInput = [];
 
@@ -162,7 +164,7 @@ class Leg {
   }
 
   addPixels() {
-    this.queue += colorInput.length * 2; // pixels per input
+    this.queue += colorInput.length * PIXEL_COLOR_PER_INPUT; // pixels per input
   }
 
   tick() {
@@ -170,9 +172,9 @@ class Leg {
       this.queue--;
 
       // 2 pixels in a row of each color per input
-      const c = colorInput[Math.floor(this.i / 2)];
+      const c = colorInput[Math.floor(this.i / PIXEL_COLOR_PER_INPUT)];
       this.pixelColors.unshift(color(c));
-      this.i = (this.i + 1) % (colorInput.length * 2);
+      this.i = (this.i + 1) % (colorInput.length * PIXEL_COLOR_PER_INPUT);
     } else {
       this.pixelColors.unshift(lightOff);
     }
