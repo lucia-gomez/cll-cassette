@@ -33,7 +33,8 @@ function setup() {
 function draw() {
   background(20);
   fill("white");
-  text("Press 'P' to add joy pixels", 10, 10);
+  text("Press 'Q' to add joy pixels (left)", 10, 10);
+  text("Press 'P' to add joy pixels (right)", 10, 30);
 
   if (millis() - lastTick >= speedSlider.value()) {
     cassette.tick();
@@ -45,8 +46,9 @@ function draw() {
 function keyPressed() {
   switch (key) {
     case "p":
-      console.log("add");
-      // cassette.addPixels();
+      cassette.legRight.addPixels();
+      break;
+    case "q":
       cassette.legLeft.addPixels();
       break;
   }
@@ -87,7 +89,7 @@ class Cassette {
   }
 
   addPixelsRight(c) {
-    this.spoolLeft.addPixels(c);
+    this.spoolRight.addPixels(c);
   }
 
   tick() {
@@ -103,9 +105,9 @@ class Cassette {
     // }
 
     this.legLeft.tick();
-    // this.legRight.tick();
+    this.legRight.tick();
     this.spoolLeft.tick();
-    // this.spoolRight.tick();
+    this.spoolRight.tick();
   }
 
   draw() {
