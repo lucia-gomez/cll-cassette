@@ -250,9 +250,11 @@ class Spool {
   checkAndDrawCircles() {
     // Check if the last pixel in the array has reached the center of the spool
     if (this.pixels[this.pixels.length - 1].color !== lightOff) {
+      // if it has color, increment the counter
       this.pixelsCounter++;
     }
 
+    // If the counter reaches the number of pixels per circle, increment the circle number
     if (this.pixelsCounter >= this.pixelsPerCircle) {
       this.circleNum++
       this.pixelsPerCircle += 20;
@@ -263,7 +265,7 @@ class Spool {
     for (let i = this.circleNum - 1; i >= 0; i--) {
       fill(colorInput[i % colorInput.length]);
       stroke(33);
-      // increate the radius of the circle by 25 for each circle
+      // increase the radius of the circle by 25 for each circle
       circle(this.x, this.y, this.radius + i * 25);
     }
   }
