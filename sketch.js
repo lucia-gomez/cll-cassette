@@ -223,7 +223,8 @@ class Spool {
 
     this.circleNum = 0;
     this.pixelsCounter = 0;
-    this.pixelsPerCircle = 30;
+    this.pixelsPerCircle = 3 * PIXEL_COLOR_PER_INPUT * colorInput.length;
+    this.maxCircles = 5;
   }
 
   addPixels(c) {
@@ -249,24 +250,42 @@ class Spool {
 
   checkAndDrawCircles() {
     // Check if the last pixel in the array has reached the center of the spool
-    if (this.pixels[this.pixels.length - 1].color !== lightOff) {
+    let maxPixels = this.pixelsPerCircle * this.maxCircles;
+    if (
+      this.pixels[this.pixels.length - 1].color !== lightOff &&
+      this.pixelsCounter < maxPixels
+    ) {
       // if it has color, increment the counter
       this.pixelsCounter++;
     }
 
-    // If the counter reaches the number of pixels per circle, increment the circle number
-    if (this.pixelsCounter >= this.pixelsPerCircle) {
-      this.circleNum++
-      this.pixelsPerCircle += 20;
-      this.pixelsCounter = 0;
-    }
+    let filledRings = floor(this.pixelsCounter / this.pixelsPerCircle);
+    let pixelsInCurrentRing = this.pixelsCounter % this.pixelsPerCircle;
 
-    // Draw circles from largest to smallest (reverse order)
-    for (let i = this.circleNum - 1; i >= 0; i--) {
-      fill(colorInput[i % colorInput.length]);
-      stroke(33);
-      // increase the radius of the circle by 25 for each circle
-      circle(this.x, this.y, this.radius + i * 25);
+    // Draw rings from smallest to largest
+    for (let i = 0; i <= filledRings; i++) {
+      let opacity;
+
+      if (i === filledRings) {
+        opacity = map(pixelsInCurrentRing, 0, this.pixelsPerCircle, 0, 255);
+      } else {
+        opacity = 255;
+      }
+
+      let opacityColor = color(
+        red(colorFinal),
+        green(colorFinal),
+        blue(colorFinal),
+        opacity
+      );
+
+      noFill();
+      stroke(opacityColor);
+      strokeWeight(r);
+
+      // +4 for spacing between rings
+      let ringRadius = this.radius + i * (r * 2 + 4);
+      circle(this.x, this.y, ringRadius);
     }
   }
 
