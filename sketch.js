@@ -22,7 +22,7 @@ function setup() {
   colorFinal = color("#894CE0");
   colorInput = ["#8D7EFC", "#BE94FF", "#CD6EFF", "#FFA9FF", "#FFF"];
 
-  cassette = new Cassette(50, 50, 600, 376);
+  cassette = new Cassette(90, 90, 600, 376);
 
   speedSlider = createSlider(5, 200, 80, 10);
 
