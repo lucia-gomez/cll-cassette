@@ -206,7 +206,7 @@ class Cassette {
     }
   }
 
-  drawInfinityCurve = () => {
+  drawInfinityCurve() {
     let centerX = (this.spoolLeft.x + this.spoolRight.x) / 2;
     let centerY = this.spoolLeft.y;
 
@@ -449,6 +449,17 @@ class Spool {
       // +4 for spacing between rings
       let ringRadius = this.radius + i * (r * 2 + 4);
       circle(this.x, this.y, ringRadius);
+
+      // State specific drawing
+      if (this.state === "unlock" && i === filledRings) {
+        // Add an outer glow to the main ring
+        for (let i = 3; i >= 0; i--) {
+          noFill();
+          stroke(color(red(colorFinal), green(colorFinal), blue(colorFinal), 80 - i * 6));
+          strokeWeight(r * (1 + i * 0.5));
+          circle(this.x, this.y, ringRadius+i*3);
+        }
+      }
     }
   }
 
