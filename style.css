@@ -6,3 +6,11 @@ body {
 canvas {
   display: block;
 }
+
+input {
+  display: block;
+}
+
+p {
+  margin: 0;
+}
