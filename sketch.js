@@ -120,6 +120,7 @@ class Cassette {
     this.lemniscateT = 0; // Parameter for the infinity curve animation
     this.numCircles = 4; // Number of circles in the group
     this.circleSpacing = 0.2; // Even spacing between circles
+    this.rotationAngle = 0; // Rotation angle for the lines
 
     this.borderPixels = this.generateBorderPixels();
     this.borderColors = this.borderPixels.map((_) => colorFinal);
@@ -142,6 +143,79 @@ class Cassette {
       75,
       this.addPixelsRight.bind(this)
     );
+
+    // Visual effect for the concert state
+    this.drawInfinityCurve = () => {
+      let centerX = (this.spoolLeft.x + this.spoolRight.x) / 2;
+      let centerY = this.spoolLeft.y;
+
+      let width = this.spoolRight.x - this.spoolLeft.x; // Width of the loop
+
+      // Draw each circle in the group
+      for (let i = 0; i < this.numCircles; i++) {
+        // Calculate position for each circle with offset
+        let t = this.lemniscateT + i * this.circleSpacing;
+
+        let x = centerX + (width * cos(t)) / (1 + sin(t) * sin(t));
+        let y = centerY + (width * sin(t) * cos(t)) / (1 + sin(t) * sin(t));
+
+        let radius = 10 + i * 4; // Radius of the circle
+
+        // Main circle
+        noStroke();
+        fill("yellow");
+        circle(x, y, radius);
+
+        // Add glowing effect for each circle
+        for (let j = 2; j >= 0; j--) {
+          let glowColor = color("yellow");
+          glowColor.setAlpha(64 / (j + 1));
+          fill(glowColor);
+          circle(x, y, radius * (j + 1.5));
+        }
+      }
+
+      // Increment the parameter
+      this.lemniscateT += 0.05;
+    }
+
+
+    this.drawRotatingLines = () => {
+      /* Draw rotating lines */
+      let lineLength = 80; // Length of the rotating lines
+  
+      // Draw line for left spool
+      push();
+      translate(this.spoolLeft.x, this.spoolLeft.y);
+      rotate(-this.rotationAngle);
+      stroke('yellow');
+      strokeWeight(3);
+      line(-lineLength/2, 0, lineLength/2, 0);
+      stroke(color('yellow'));
+      strokeWeight(6);
+      line(-lineLength/4, 0, lineLength/4, 0);
+      stroke('white');
+      strokeWeight(1);
+      line(0, 0, lineLength*1.4, 0);
+      pop();
+  
+      // Draw line for right spool
+      push();
+      translate(this.spoolRight.x, this.spoolRight.y);
+      rotate(this.rotationAngle); // Rotate in opposite direction
+      stroke('yellow');
+      strokeWeight(3);
+      line(-lineLength/2, 0, lineLength/2, 0);
+      stroke(color('yellow'));
+      strokeWeight(6);
+      line(-lineLength/4, 0, lineLength/4, 0);
+      stroke('white');
+      strokeWeight(1);
+      line(0, 0, lineLength*1.4, 0);
+      pop();
+  
+      this.rotationAngle += 0.02; // Control rotation speed of the lines
+    }
   }
 
   switchState(newState) {
@@ -199,38 +273,9 @@ class Cassette {
     tint(255, 64);
     image(img, this.x, this.y);
 
-    if (this.state === "unlock") {
-      let centerX = (this.spoolLeft.x + this.spoolRight.x) / 2;
-      let centerY = this.spoolLeft.y;
-
-      let width = this.spoolRight.x - this.spoolLeft.x; // Width of the loop
-
-      // Draw each circle in the group
-      for (let i = 0; i < this.numCircles; i++) {
-        // Calculate position for each circle with offset
-        let t = this.lemniscateT + i * this.circleSpacing;
-
-        let x = centerX + (width * cos(t)) / (1 + sin(t) * sin(t));
-        let y = centerY + (width * sin(t) * cos(t)) / (1 + sin(t) * sin(t));
-
-        let radius = 10 + i * 4; // Radius of the circle
-
-        // Main circle
-        noStroke();
-        fill("yellow");
-        circle(x, y, radius);
-
-        // Add glowing effect for each circle
-        for (let j = 2; j >= 0; j--) {
-          let glowColor = color("yellow");
-          glowColor.setAlpha(64 / (j + 1));
-          fill(glowColor);
-          circle(x, y, radius * (j + 1.5));
-        }
-      }
-
-      // Increment the parameter
-      this.lemniscateT += 0.05;
+    if (this.state === "unlock") {   
+      this.drawInfinityCurve()
+      this.drawRotatingLines()
     }
   }
 
