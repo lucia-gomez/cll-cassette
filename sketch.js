@@ -2,6 +2,7 @@ let img;
 let cassette;
 
 let speedSlider;
+let startButton, manualButton, halfFullButton, unlockButton, concertButton;
 let lastTick = 0;
 
 const r = 12;
@@ -28,13 +29,37 @@ function setup() {
 
   textAlign(LEFT, TOP);
   textSize(16);
+
+  startButton = createButton("Start");
+  startButton.mousePressed(() => cassette.switchState("start"));
+  startButton.position(10, 60);
+
+  manualButton = createButton("Manual");
+  manualButton.mousePressed(() => cassette.switchState("manual"));
+  manualButton.position(10, 90);
+
+  halfFullButton = createButton("Half Full");
+  halfFullButton.mousePressed(() => cassette.switchState("halfFull"));
+  halfFullButton.position(10, 120);
+
+  unlockButton = createButton("Unlock");
+  unlockButton.mousePressed(() =>  cassette.switchState("unlock"));
+  unlockButton.position(10, 150);
+
+  concertButton = createButton("Concert");
+  concertButton.mousePressed(() => cassette.switchState("concert"))
+  concertButton.position(10, 180);
+
 }
 
 function draw() {
   background(20);
   fill("white");
-  text("Press 'Q' to add joy pixels (left)", 10, 10);
-  text("Press 'P' to add joy pixels (right)", 10, 30);
+
+  if(cassette.state === "manual") {
+    text("Press 'Q' to add joy pixels (left)", 10, 10);
+    text("Press 'P' to add joy pixels (right)", 10, 30);
+  }
 
   if (millis() - lastTick >= speedSlider.value()) {
     cassette.tick();
@@ -44,13 +69,15 @@ function draw() {
 }
 
 function keyPressed() {
-  switch (key) {
-    case "p":
-      cassette.legRight.addPixels();
-      break;
-    case "q":
-      cassette.legLeft.addPixels();
-      break;
+  if(cassette.state === "manual") {
+    switch (key) {
+      case "p":
+        cassette.legRight.addPixels();
+        break;
+      case "q":
+        cassette.legLeft.addPixels();
+        break;
+    }
   }
 }
 
@@ -60,6 +87,11 @@ class Cassette {
     this.y = y;
     this.w = w;
     this.h = h;
+    this.state = "start";
+
+    this.lemniscateT = 0; // Parameter for the infinity curve animation
+    this.numCircles = 4;  // Number of circles in the group
+    this.circleSpacing = 0.2; // Even spacing between circles
 
     this.borderPixels = this.generateBorderPixels();
     this.borderColors = this.borderPixels.map((_) => colorFinal);
@@ -67,8 +99,8 @@ class Cassette {
     let spoolY = y + h / 2 - 23;
     let spoolX1 = x + 170;
     let spoolX2 = x + 420;
-    this.spoolLeft = new Spool(spoolX1, spoolY, this.y + this.h);
-    this.spoolRight = new Spool(spoolX2, spoolY, this.y + this.h);
+    this.spoolLeft = new Spool(spoolX1, spoolY, this.y + this.h, this.state);
+    this.spoolRight = new Spool(spoolX2, spoolY, this.y + this.h, this.state);
 
     this.legLeft = new Leg(
       spoolX1,
@@ -82,6 +114,12 @@ class Cassette {
       75,
       this.addPixelsRight.bind(this)
     );
+  }
+
+  switchState(newState) {
+    this.state = newState;
+    this.spoolLeft.switchState(newState);
+    this.spoolRight.switchState(newState);
   }
 
   addPixelsLeft(c) {
@@ -125,6 +163,40 @@ class Cassette {
     fill(245);
     tint(255, 64);
     image(img, this.x, this.y);
+
+    if(this.state === "unlock") {
+      let centerX = (this.spoolLeft.x + this.spoolRight.x) / 2;
+      let centerY = this.spoolLeft.y;
+      
+      let width = this.spoolRight.x - this.spoolLeft.x; // Width of the loop
+      
+      // Draw each circle in the group
+      for(let i = 0; i < this.numCircles; i++) {
+        // Calculate position for each circle with offset
+        let t = this.lemniscateT + i * this.circleSpacing;
+        
+        let x = centerX + width * cos(t) / (1 + sin(t) * sin(t));
+        let y = centerY + width * sin(t) * cos(t) / (1 + sin(t) * sin(t));
+        
+        let radius = 10 + i*4; // Radius of the circle
+        
+        // Main circle
+        noStroke();
+        fill('yellow');
+        circle(x, y, radius);
+        
+        // Add glowing effect for each circle
+        for(let j = 2; j >= 0; j--) {
+          let glowColor = color('yellow');
+          glowColor.setAlpha(64 / (j + 1));
+          fill(glowColor);
+          circle(x, y, radius *(j+1.5));
+        }
+      }
+      
+      // Increment the parameter
+      this.lemniscateT += 0.05;
+    }
   }
 
   generateBorderPixels() {
@@ -207,6 +279,7 @@ class Spool {
     this.x = x;
     this.y = y;
     this.cassetteBorderBottom = borderBottom;
+    this.state = 'start';
 
     // spiral parameters
     // lmao magic numbers
@@ -226,6 +299,11 @@ class Spool {
     this.pixelsPerCircle = 3 * PIXEL_COLOR_PER_INPUT * colorInput.length;
     this.maxCircles = 5;
   }
+
+  switchState(newState) {
+    this.state = newState;
+  }
+
 
   addPixels(c) {
     this.queue.push(c);
