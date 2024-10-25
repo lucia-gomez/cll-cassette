@@ -142,80 +142,7 @@ class Cassette {
       this.y + this.h,
       75,
       this.addPixelsRight.bind(this)
-    );
-
-    // Visual effect for the concert state
-    this.drawInfinityCurve = () => {
-      let centerX = (this.spoolLeft.x + this.spoolRight.x) / 2;
-      let centerY = this.spoolLeft.y;
-
-      let width = this.spoolRight.x - this.spoolLeft.x; // Width of the loop
-
-      // Draw each circle in the group
-      for (let i = 0; i < this.numCircles; i++) {
-        // Calculate position for each circle with offset
-        let t = this.lemniscateT + i * this.circleSpacing;
-
-        let x = centerX + (width * cos(t)) / (1 + sin(t) * sin(t));
-        let y = centerY + (width * sin(t) * cos(t)) / (1 + sin(t) * sin(t));
-
-        let radius = 10 + i * 4; // Radius of the circle
-
-        // Main circle
-        noStroke();
-        fill("yellow");
-        circle(x, y, radius);
-
-        // Add glowing effect for each circle
-        for (let j = 2; j >= 0; j--) {
-          let glowColor = color("yellow");
-          glowColor.setAlpha(64 / (j + 1));
-          fill(glowColor);
-          circle(x, y, radius * (j + 1.5));
-        }
-      }
-
-      // Increment the parameter
-      this.lemniscateT += 0.05;
-    }
-
-
-    this.drawRotatingLines = () => {
-      /* Draw rotating lines */
-      let lineLength = 80; // Length of the rotating lines
-  
-      // Draw line for left spool
-      push();
-      translate(this.spoolLeft.x, this.spoolLeft.y);
-      rotate(-this.rotationAngle);
-      stroke('yellow');
-      strokeWeight(3);
-      line(-lineLength/2, 0, lineLength/2, 0);
-      stroke(color('yellow'));
-      strokeWeight(6);
-      line(-lineLength/4, 0, lineLength/4, 0);
-      stroke('white');
-      strokeWeight(1);
-      line(0, 0, lineLength*1.4, 0);
-      pop();
-  
-      // Draw line for right spool
-      push();
-      translate(this.spoolRight.x, this.spoolRight.y);
-      rotate(this.rotationAngle); // Rotate in opposite direction
-      stroke('yellow');
-      strokeWeight(3);
-      line(-lineLength/2, 0, lineLength/2, 0);
-      stroke(color('yellow'));
-      strokeWeight(6);
-      line(-lineLength/4, 0, lineLength/4, 0);
-      stroke('white');
-      strokeWeight(1);
-      line(0, 0, lineLength*1.4, 0);
-      pop();
-  
-      this.rotationAngle += 0.02; // Control rotation speed of the lines
-    }
+    ); 
   }
 
   switchState(newState) {
@@ -277,6 +204,77 @@ class Cassette {
       this.drawInfinityCurve()
       this.drawRotatingLines()
     }
+  }
+
+  drawInfinityCurve = () => {
+    let centerX = (this.spoolLeft.x + this.spoolRight.x) / 2;
+    let centerY = this.spoolLeft.y;
+
+    let width = this.spoolRight.x - this.spoolLeft.x; // Width of the loop
+
+    // Draw each circle in the group
+    for (let i = 0; i < this.numCircles; i++) {
+      // Calculate position for each circle with offset
+      let t = this.lemniscateT + i * this.circleSpacing;
+
+      let x = centerX + (width * cos(t)) / (1 + sin(t) * sin(t));
+      let y = centerY + (width * sin(t) * cos(t)) / (1 + sin(t) * sin(t));
+
+      let radius = 10 + i * 4; // Radius of the circle
+
+      // Main circle
+      noStroke();
+      fill("yellow");
+      circle(x, y, radius);
+
+      // Add glowing effect for each circle
+      for (let j = 2; j >= 0; j--) {
+        let glowColor = color("yellow");
+        glowColor.setAlpha(64 / (j + 1));
+        fill(glowColor);
+        circle(x, y, radius * (j + 1.5));
+      }
+    }
+
+    // Increment the parameter
+    this.lemniscateT += 0.05;
+  }
+
+  drawRotatingLines() {
+    /* Draw rotating lines */
+    let lineLength = 80; // Length of the rotating lines
+
+    // Draw line for left spool
+    push();
+    translate(this.spoolLeft.x, this.spoolLeft.y);
+    rotate(-this.rotationAngle);
+    stroke('yellow');
+    strokeWeight(3);
+    line(-lineLength/2, 0, lineLength/2, 0);
+    stroke(color('yellow'));
+    strokeWeight(6);
+    line(-lineLength/4, 0, lineLength/4, 0);
+    stroke('white');
+    strokeWeight(1);
+    line(0, 0, lineLength*1.4, 0);
+    pop();
+
+    // Draw line for right spool
+    push();
+    translate(this.spoolRight.x, this.spoolRight.y);
+    rotate(this.rotationAngle); // Rotate in opposite direction
+    stroke('yellow');
+    strokeWeight(3);
+    line(-lineLength/2, 0, lineLength/2, 0);
+    stroke(color('yellow'));
+    strokeWeight(6);
+    line(-lineLength/4, 0, lineLength/4, 0);
+    stroke('white');
+    strokeWeight(1);
+    line(0, 0, lineLength*1.4, 0);
+    pop();
+
+    this.rotationAngle += 0.02; // Control rotation speed of the lines
   }
 
   generateBorderPixels() {
