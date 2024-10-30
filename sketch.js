@@ -204,7 +204,6 @@ class Cassette {
 
     if (this.state === "unlock") {
       this.drawInfinityCurve();
-      this.drawRotatingLines();
     }
   }
 
@@ -240,43 +239,6 @@ class Cassette {
 
     // Increment the parameter
     this.lemniscateT += 0.05;
-  }
-
-  drawRotatingLines() {
-    /* Draw rotating lines */
-    let lineLength = 80; // Length of the rotating lines
-
-    // Draw line for left spool
-    push();
-    translate(this.spoolLeft.x, this.spoolLeft.y);
-    rotate(-this.rotationAngle);
-    stroke("yellow");
-    strokeWeight(3);
-    line(-lineLength / 2, 0, lineLength / 2, 0);
-    stroke(color("yellow"));
-    strokeWeight(6);
-    line(-lineLength / 4, 0, lineLength / 4, 0);
-    stroke("white");
-    strokeWeight(1);
-    line(0, 0, lineLength * 1.4, 0);
-    pop();
-
-    // Draw line for right spool
-    push();
-    translate(this.spoolRight.x, this.spoolRight.y);
-    rotate(this.rotationAngle); // Rotate in opposite direction
-    stroke("yellow");
-    strokeWeight(3);
-    line(-lineLength / 2, 0, lineLength / 2, 0);
-    stroke(color("yellow"));
-    strokeWeight(6);
-    line(-lineLength / 4, 0, lineLength / 4, 0);
-    stroke("white");
-    strokeWeight(1);
-    line(0, 0, lineLength * 1.4, 0);
-    pop();
-
-    this.rotationAngle += 0.02; // Control rotation speed of the lines
   }
 
   generateBorderPixels() {
@@ -355,11 +317,11 @@ class Leg {
 }
 
 class Spool {
-  constructor(x, y, borderBottom) {
+  constructor(x, y, borderBottom, state) {
     this.x = x;
     this.y = y;
     this.cassetteBorderBottom = borderBottom;
-    this.state = "manual";
+    this.state = state;
 
     // spiral parameters
     // lmao magic numbers
@@ -377,7 +339,10 @@ class Spool {
 
     this.pixelsCounter = 0;
     this.pixelsPerCircle = 3 * PIXEL_COLOR_PER_INPUT * colorInput.length;
-    this.maxCircles = 5;
+    this.maxCircles = 6;
+
+    this.rotating = false;
+    this.rotateAngle = 0;
   }
 
   switchState(newState) {
@@ -390,7 +355,9 @@ class Spool {
     } else if (newState === "unlock" || newState === "concert") {
       this.pixelsCounter = this.pixelsPerCircle * this.maxCircles;
     }
-    this.checkAndDrawCircles();
+    this.rotating = newState === "unlock" || newState === "concert";
+
+    this.updateCircles();
   }
 
   addPixels(c) {
@@ -404,9 +371,14 @@ class Spool {
     } else {
       this.pixelColors.unshift(lightOff);
     }
+
+    if (this.rotating) {
+      this.rotate();
+    }
   }
 
   draw() {
+    // incoming pixels moving towards center
     this.pixels.forEach((pixel, i) => {
       pixel.setColor(this.pixelColors[i]);
       pixel.draw();
@@ -414,10 +386,22 @@ class Spool {
 
     this.updateCircles();
 
+    // filled rings
     let filledRings = floor(this.pixelsCounter / this.pixelsPerCircle);
     let pixelsInCurrentRing = this.pixelsCounter % this.pixelsPerCircle;
 
     this.pixels.forEach((pixel, i) => {
+      // Turn off pixels in current rotation angle
+      if (this.rotating) {
+        let theta = atan2(pixel.y - this.y, pixel.x - this.x);
+        theta = (theta + TWO_PI) % TWO_PI;
+        if (abs(theta - this.rotateAngle) < 0.2 && pixel.ringNumber > 0) {
+          pixel.setColor(lightOff);
+          pixel.draw();
+          return;
+        }
+      }
+
       if (pixel.ringNumber <= filledRings && pixel.ringNumber > 0) {
         // Rings that are fully filled
         pixel.setColor(colorFinal);
@@ -443,6 +427,10 @@ class Spool {
       // if it has color, increment the counter
       this.pixelsCounter++;
     }
+  }
+
+  rotate() {
+    this.rotateAngle = (this.rotateAngle + PI / 24) % TWO_PI;
   }
 
   generatePixels() {
