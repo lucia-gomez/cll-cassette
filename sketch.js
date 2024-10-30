@@ -60,8 +60,10 @@ function setup() {
   concertButton.mousePressed(() => cassette.switchState("concert"));
   concertButton.position(10, 180);
 
-  scheduleInputLeft();
-  scheduleInputRight();
+  if (cassette.state === "start" || cassette.state === "halfFull") {
+    scheduleInputLeft();
+    scheduleInputRight();
+  }
 }
 
 function draw() {
@@ -115,7 +117,7 @@ class Cassette {
     this.y = y;
     this.w = w;
     this.h = h;
-    this.state = "start";
+    this.state = "manual";
 
     this.lemniscateT = 0; // Parameter for the infinity curve animation
     this.numCircles = 4; // Number of circles in the group
@@ -142,7 +144,7 @@ class Cassette {
       this.y + this.h,
       75,
       this.addPixelsRight.bind(this)
-    ); 
+    );
   }
 
   switchState(newState) {
@@ -200,9 +202,9 @@ class Cassette {
     tint(255, 64);
     image(img, this.x, this.y);
 
-    if (this.state === "unlock") {   
-      this.drawInfinityCurve()
-      this.drawRotatingLines()
+    if (this.state === "unlock") {
+      this.drawInfinityCurve();
+      this.drawRotatingLines();
     }
   }
 
@@ -248,30 +250,30 @@ class Cassette {
     push();
     translate(this.spoolLeft.x, this.spoolLeft.y);
     rotate(-this.rotationAngle);
-    stroke('yellow');
+    stroke("yellow");
     strokeWeight(3);
-    line(-lineLength/2, 0, lineLength/2, 0);
-    stroke(color('yellow'));
+    line(-lineLength / 2, 0, lineLength / 2, 0);
+    stroke(color("yellow"));
     strokeWeight(6);
-    line(-lineLength/4, 0, lineLength/4, 0);
-    stroke('white');
+    line(-lineLength / 4, 0, lineLength / 4, 0);
+    stroke("white");
     strokeWeight(1);
-    line(0, 0, lineLength*1.4, 0);
+    line(0, 0, lineLength * 1.4, 0);
     pop();
 
     // Draw line for right spool
     push();
     translate(this.spoolRight.x, this.spoolRight.y);
     rotate(this.rotationAngle); // Rotate in opposite direction
-    stroke('yellow');
+    stroke("yellow");
     strokeWeight(3);
-    line(-lineLength/2, 0, lineLength/2, 0);
-    stroke(color('yellow'));
+    line(-lineLength / 2, 0, lineLength / 2, 0);
+    stroke(color("yellow"));
     strokeWeight(6);
-    line(-lineLength/4, 0, lineLength/4, 0);
-    stroke('white');
+    line(-lineLength / 4, 0, lineLength / 4, 0);
+    stroke("white");
     strokeWeight(1);
-    line(0, 0, lineLength*1.4, 0);
+    line(0, 0, lineLength * 1.4, 0);
     pop();
 
     this.rotationAngle += 0.02; // Control rotation speed of the lines
@@ -357,11 +359,12 @@ class Spool {
     this.x = x;
     this.y = y;
     this.cassetteBorderBottom = borderBottom;
-    this.state = "start";
+    this.state = "manual";
 
     // spiral parameters
     // lmao magic numbers
-    this.angle = 1.13;
+    this.initialAngle = 1.13;
+    this.angle = this.initialAngle;
     this.initialRadius = 43;
     this.radius = this.initialRadius;
     this.spacing = 10.02;
@@ -408,10 +411,29 @@ class Spool {
       pixel.setColor(this.pixelColors[i]);
       pixel.draw();
     });
-    this.checkAndDrawCircles();
+
+    this.updateCircles();
+
+    let filledRings = floor(this.pixelsCounter / this.pixelsPerCircle);
+    let pixelsInCurrentRing = this.pixelsCounter % this.pixelsPerCircle;
+
+    this.pixels.forEach((pixel, i) => {
+      if (pixel.ringNumber <= filledRings && pixel.ringNumber > 0) {
+        // Rings that are fully filled
+        pixel.setColor(colorFinal);
+        pixel.draw();
+      } else if (pixel.ringNumber === filledRings + 1) {
+        // Current ring that is partially filled
+        let opacity = map(pixelsInCurrentRing, 0, this.pixelsPerCircle, 0, 255);
+        pixel.setColor(
+          color(red(colorFinal), green(colorFinal), blue(colorFinal), opacity)
+        );
+        pixel.draw();
+      }
+    });
   }
 
-  checkAndDrawCircles() {
+  updateCircles() {
     // Check if the last pixel in the array has reached the center of the spool
     let maxPixels = this.pixelsPerCircle * this.maxCircles;
     if (
@@ -421,61 +443,28 @@ class Spool {
       // if it has color, increment the counter
       this.pixelsCounter++;
     }
-
-    let filledRings = floor(this.pixelsCounter / this.pixelsPerCircle);
-    let pixelsInCurrentRing = this.pixelsCounter % this.pixelsPerCircle;
-
-    // Draw rings from smallest to largest
-    for (let i = 0; i <= filledRings; i++) {
-      let opacity;
-
-      if (i === filledRings) {
-        opacity = map(pixelsInCurrentRing, 0, this.pixelsPerCircle, 0, 255);
-      } else {
-        opacity = 255;
-      }
-
-      let opacityColor = color(
-        red(colorFinal),
-        green(colorFinal),
-        blue(colorFinal),
-        opacity
-      );
-
-      noFill();
-      stroke(opacityColor);
-      strokeWeight(r);
-
-      // +4 for spacing between rings
-      let ringRadius = this.radius + i * (r * 2 + 4);
-      circle(this.x, this.y, ringRadius);
-
-      // State specific drawing
-      if (this.state === "unlock" && i === filledRings) {
-        // Add an outer glow to the main ring
-        for (let i = 3; i >= 0; i--) {
-          noFill();
-          stroke(color(red(colorFinal), green(colorFinal), blue(colorFinal), 80 - i * 6));
-          strokeWeight(r * (1 + i * 0.5));
-          circle(this.x, this.y, ringRadius+i*3);
-        }
-      }
-    }
   }
 
   generatePixels() {
     const p = [];
     let cx, cy;
+    let currentRing = 1;
+
     for (let i = 0; i < this.numPixels; i++) {
       cx = this.x + this.radius * cos(this.angle);
       cy = this.y + this.radius * sin(this.angle);
 
-      p.push(new Pixel(cx, cy));
+      p.push(new Pixel(cx, cy, currentRing));
 
       // maintain constant distance between pixels like on LED strip
       let deltaAngle = this.spacing / this.radius;
       this.angle += deltaAngle;
       this.radius += (this.spacing * deltaAngle) / TWO_PI;
+
+      if (this.angle >= TWO_PI + this.initialAngle) {
+        this.angle -= TWO_PI;
+        currentRing++;
+      }
     }
 
     // from spool to border bottom
@@ -489,10 +478,11 @@ class Spool {
 }
 
 class Pixel {
-  constructor(x, y) {
+  constructor(x, y, ringNumber = 0) {
     this.x = x;
     this.y = y;
     this.color = lightOff;
+    this.ringNumber = ringNumber;
   }
 
   setColor(c) {
