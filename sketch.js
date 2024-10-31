@@ -119,11 +119,6 @@ class Cassette {
     this.h = h;
     this.state = "manual";
 
-    this.lemniscateT = 0; // Parameter for the infinity curve animation
-    this.numCircles = 4; // Number of circles in the group
-    this.circleSpacing = 0.2; // Even spacing between circles
-    this.rotationAngle = 0; // Rotation angle for the lines
-
     this.borderPixels = this.generateBorderPixels();
     this.borderColors = this.borderPixels.map((_) => colorFinal);
 
@@ -132,6 +127,8 @@ class Cassette {
     let spoolX2 = x + 420;
     this.spoolLeft = new Spool(spoolX1, spoolY, this.y + this.h, this.state);
     this.spoolRight = new Spool(spoolX2, spoolY, this.y + this.h, this.state);
+
+    this.infinityLoop = new InfinityLoop(spoolX1, spoolX2, spoolY);
 
     this.legLeft = new Leg(
       spoolX1,
@@ -184,6 +181,8 @@ class Cassette {
     this.legRight.tick();
     this.spoolLeft.tick();
     this.spoolRight.tick();
+
+    this.infinityLoop.tick();
   }
 
   draw() {
@@ -202,43 +201,9 @@ class Cassette {
     tint(255, 64);
     image(img, this.x, this.y);
 
-    if (this.state === "unlock") {
-      this.drawInfinityCurve();
-    }
-  }
+    this.infinityLoop.switchState(this.state);
+    this.infinityLoop.draw();
 
-  drawInfinityCurve() {
-    let centerX = (this.spoolLeft.x + this.spoolRight.x) / 2;
-    let centerY = this.spoolLeft.y;
-
-    let width = this.spoolRight.x - this.spoolLeft.x; // Width of the loop
-
-    // Draw each circle in the group
-    for (let i = 0; i < this.numCircles; i++) {
-      // Calculate position for each circle with offset
-      let t = this.lemniscateT + i * this.circleSpacing;
-
-      let x = centerX + (width * cos(t)) / (1 + sin(t) * sin(t));
-      let y = centerY + (width * sin(t) * cos(t)) / (1 + sin(t) * sin(t));
-
-      let radius = 10 + i * 4; // Radius of the circle
-
-      // Main circle
-      noStroke();
-      fill("yellow");
-      circle(x, y, radius);
-
-      // Add glowing effect for each circle
-      for (let j = 2; j >= 0; j--) {
-        let glowColor = color("yellow");
-        glowColor.setAlpha(64 / (j + 1));
-        fill(glowColor);
-        circle(x, y, radius * (j + 1.5));
-      }
-    }
-
-    // Increment the parameter
-    this.lemniscateT += 0.05;
   }
 
   generateBorderPixels() {
@@ -262,6 +227,86 @@ class Cassette {
       p.push(new Pixel(this.x + m, i));
     }
     return p;
+  }
+}
+
+class InfinityLoop {
+  constructor(spoolLeftX, spoolRightX, centerY) {
+    this.centerX = (spoolLeftX + spoolRightX) / 2;
+    this.centerY = centerY;
+    this.width = spoolRightX - spoolLeftX;
+    this.state = "manual";
+    
+    this.numPoints = 60; 
+    this.t = 0;
+    
+    this.pixels = this.generatePixels();
+    this.pixelColors = this.pixels.map(() => lightOff);
+    
+    // Parameters for moving yellow pixels
+    this.activePixels = 6; 
+    this.currentIndex = 0; 
+  }
+
+  generatePixels() {
+    const pixels = [];
+    const step = TWO_PI / this.numPoints;
+
+    for (let t = 0; t < TWO_PI; t += step) {
+      // Parametric equations for infinity curve (lemniscate)
+      let x = this.centerX + (this.width * cos(t)) / (1 + sin(t) * sin(t));
+      let y = this.centerY + (this.width * sin(t) * cos(t)) / (1 + sin(t) * sin(t)/100);
+      
+      pixels.push(new Pixel(x, y));
+    }
+
+    return pixels;
+  }
+
+  switchState(newState) {
+    this.state = newState;
+  }
+
+  tick() {
+    if(this.state === 'unlock' || this.state === 'concert'){
+      // Update pixel colors
+    this.pixelColors = this.pixels.map((_, i) => {
+      let distance = (i - this.currentIndex + this.numPoints) % this.numPoints;
+      if (distance < this.activePixels) {
+        let intensity = map(distance, 0, this.activePixels - 1, 64, 255);
+        let c = color('yellow');
+        c.setAlpha(intensity);
+        return c;
+      }
+      return lightOff;
+    });
+
+    // Move the active section
+    this.currentIndex = (this.currentIndex + 1) % this.numPoints;
+    } else {
+      this.pixelColors = this.pixels.map(() => lightOff);
+    }
+  }
+
+  draw() {
+    // Draw each pixel with its glow effect
+    this.pixels.forEach((pixel, i) => {
+      let c = this.pixelColors[i];
+      
+      if (c !== lightOff) {
+        // Draw glow effect for active pixels
+        for (let j = 2; j >= 0; j--) {
+          let glowColor = color('yellow');
+          glowColor.setAlpha(alpha(c) / (j + 2));
+          fill(glowColor);
+          circle(pixel.x, pixel.y, r * (j + 1.5));
+        }
+      }
+      
+      // Draw the main pixel
+      pixel.setColor(c);
+      pixel.draw();
+    });
   }
 }
 
