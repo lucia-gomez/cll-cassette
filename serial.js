@@ -57,6 +57,7 @@ function openPort() {
 }
 
 // read any incoming data:
+// NOT WORKING
 function serialEvent() {
   const inString = serial.readLine();
 
