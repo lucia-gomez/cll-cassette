@@ -20,6 +20,7 @@ function preload() {
 }
 
 function setup() {
+  serialSetup(); // serial.js file
   createCanvas(800, 600);
 
   lightOff = color("#b8b8b8");
@@ -203,7 +204,6 @@ class Cassette {
 
     this.infinityLoop.switchState(this.state);
     this.infinityLoop.draw();
-
   }
 
   generateBorderPixels() {
@@ -236,16 +236,16 @@ class InfinityLoop {
     this.centerY = centerY;
     this.width = spoolRightX - spoolLeftX;
     this.state = "manual";
-    
-    this.numPoints = 60; 
+
+    this.numPoints = 60;
     this.t = 0;
-    
+
     this.pixels = this.generatePixels();
     this.pixelColors = this.pixels.map(() => lightOff);
-    
+
     // Parameters for moving yellow pixels
-    this.activePixels = 6; 
-    this.currentIndex = 0; 
+    this.activePixels = 6;
+    this.currentIndex = 0;
   }
 
   generatePixels() {
@@ -255,8 +255,10 @@ class InfinityLoop {
     for (let t = 0; t < TWO_PI; t += step) {
       // Parametric equations for infinity curve (lemniscate)
       let x = this.centerX + (this.width * cos(t)) / (1 + sin(t) * sin(t));
-      let y = this.centerY + (this.width * sin(t) * cos(t)) / (1 + sin(t) * sin(t)/100);
-      
+      let y =
+        this.centerY +
+        (this.width * sin(t) * cos(t)) / (1 + (sin(t) * sin(t)) / 100);
+
       pixels.push(new Pixel(x, y));
     }
 
@@ -268,21 +270,22 @@ class InfinityLoop {
   }
 
   tick() {
-    if(this.state === 'unlock' || this.state === 'concert'){
+    if (this.state === "unlock" || this.state === "concert") {
       // Update pixel colors
-    this.pixelColors = this.pixels.map((_, i) => {
-      let distance = (i - this.currentIndex + this.numPoints) % this.numPoints;
-      if (distance < this.activePixels) {
-        let intensity = map(distance, 0, this.activePixels - 1, 64, 255);
-        let c = color('yellow');
-        c.setAlpha(intensity);
-        return c;
-      }
-      return lightOff;
-    });
+      this.pixelColors = this.pixels.map((_, i) => {
+        let distance =
+          (i - this.currentIndex + this.numPoints) % this.numPoints;
+        if (distance < this.activePixels) {
+          let intensity = map(distance, 0, this.activePixels - 1, 64, 255);
+          let c = color("yellow");
+          c.setAlpha(intensity);
+          return c;
+        }
+        return lightOff;
+      });
 
-    // Move the active section
-    this.currentIndex = (this.currentIndex + 1) % this.numPoints;
+      // Move the active section
+      this.currentIndex = (this.currentIndex + 1) % this.numPoints;
     } else {
       this.pixelColors = this.pixels.map(() => lightOff);
     }
@@ -292,17 +295,17 @@ class InfinityLoop {
     // Draw each pixel with its glow effect
     this.pixels.forEach((pixel, i) => {
       let c = this.pixelColors[i];
-      
+
       if (c !== lightOff) {
         // Draw glow effect for active pixels
         for (let j = 2; j >= 0; j--) {
-          let glowColor = color('yellow');
+          let glowColor = color("yellow");
           glowColor.setAlpha(alpha(c) / (j + 2));
           fill(glowColor);
           circle(pixel.x, pixel.y, r * (j + 1.5));
         }
       }
-      
+
       // Draw the main pixel
       pixel.setColor(c);
       pixel.draw();
