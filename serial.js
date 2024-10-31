@@ -9,6 +9,8 @@ function serialSetup() {
   if (!navigator.serial) {
     alert("WebSerial is not supported in this browser. Try Chrome or MS Edge.");
   }
+   // open whatever port is available:
+   serial.on("portavailable", openPort);
   // if serial is available, add connect/disconnect listeners:
   navigator.serial.addEventListener("connect", portConnect);
   navigator.serial.addEventListener("disconnect", portDisconnect);
@@ -16,8 +18,7 @@ function serialSetup() {
   serial.getPorts();
   // if there's no port chosen, choose one:
   serial.on("noport", makePortButton);
-  // open whatever port is available:
-  serial.on("portavailable", openPort);
+ 
   // handle serial errors:
   serial.on("requesterror", portError);
   // handle any incoming serial data:
@@ -42,14 +43,15 @@ function choosePort() {
 
 // open the selected port, and make the port
 // button invisible:
+//this is the problem
 function openPort() {
   // wait for the serial.open promise to return,
   // then call the initiateSerial function
-  serial.open().then(initiateSerial);
+  serial.open({ baudRate: 115200 }).then(initiateSerial);
 
   // once the port opens, let the user know:
   function initiateSerial() {
-    console.log("port open");
+    console.log("port open at 115200");
     // serial.write("x");
   }
   // hide the port button once a port is chosen:
@@ -59,23 +61,26 @@ function openPort() {
 // read any incoming data:
 // NOT WORKING
 function serialEvent() {
+  console.log("something") // test if the problem is from resial.readline()
   const inString = serial.readLine();
 
-  if (inString) {
-    const currentString = inString.trim(); // Trim whitespace
-    console.log("Received serial data:", currentString); // Log the received string
+if (inString !== null) {
+  const currentString = inString.trim(); 
+  console.log("Received serial data:", currentString); 
 
-    // Process the received string
-    if (currentString[0] === "p" || currentString[0] === "P") {
-      // Example action for "P"
-      console.log("Action for P");
-      // cassette.legRight.addPixels(); // Uncomment when cassette is defined
-    } else if (currentString[0] === "q" || currentString[0] === "Q") {
-      // Example action for "Q"
-      console.log("Action for Q");
-      // cassette.legLeft.addPixels(); // Uncomment when cassette is defined
-    }
+  
+  if (currentString[0] === "p" || currentString[0] === "P") {
+    console.log("Action for P");
+    cassette.legRight.addPixels();
+  } else if (currentString[0] === "q" || currentString[0] === "Q") {
+    console.log("Action for Q");
+    cassette.legLeft.addPixels(); 
   }
+} else {
+  console.log("inString is null. No data received from serial port."); 
+}
+
+
 }
 
 // pop up an alert if there's a port error:
