@@ -94,6 +94,15 @@ function keyPressed() {
         break;
     }
   }
+  switch (key) {
+    case "w":
+      cassette.switchState("unlock");
+      break;
+    case "e":
+      cassette.switchState("start");
+      cassette.switchState("manual");
+      break;
+  }
 }
 
 function scheduleInputLeft() {
