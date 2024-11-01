@@ -72,9 +72,12 @@ function draw() {
   fill("white");
 
   if (cassette.state === "manual") {
-    text("Press 'Q' to add joy pixels (left)", 10, 10);
-    text("Press 'P' to add joy pixels (right)", 10, 30);
+    text("Press 'Q' to add joy pixels (left), 'P' to add joy pixels (right)", 10, 10);
   }
+
+  text("'W' → unlocking mode, and 'E' → manual control mode.", 10, 30);
+  text(`Current state: ${cassette.state}`, 10, height-20);
+
 
   if (millis() - lastTick >= speedSlider.value()) {
     cassette.tick();
@@ -201,6 +204,12 @@ class Cassette {
 
     this.spoolLeft.draw();
     this.spoolRight.draw();
+
+    if(this.spoolLeft.pixelsCounter > this.spoolLeft.pixelsPerCircle * this.spoolLeft.maxCircles 
+      && this.spoolRight.pixelsCounter > this.spoolRight.pixelsPerCircle * this.spoolRight.maxCircles
+    ) {
+      this.switchState("unlock");
+    }
 
     this.borderPixels.forEach((pixel, i) => {
       pixel.setColor(this.borderColors[i]);
