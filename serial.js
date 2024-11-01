@@ -59,7 +59,7 @@ function openPort() {
 }
 
 // read any incoming data:
-// NOT WORKING
+
 function serialEvent() {
   console.log("something") // test if the problem is from resial.readline()
   const inString = serial.readLine();
@@ -68,13 +68,23 @@ if (inString !== null) {
   const currentString = inString.trim(); 
   console.log("Received serial data:", currentString); 
 
-  
+  // is this a problematic way to write code? all if
   if (currentString[0] === "p" || currentString[0] === "P") {
     console.log("Action for P");
     cassette.legRight.addPixels();
-  } else if (currentString[0] === "q" || currentString[0] === "Q") {
+  } 
+  if (currentString[0] === "q" || currentString[0] === "Q") {
     console.log("Action for Q");
     cassette.legLeft.addPixels(); 
+  }
+  if (currentString[0] === "w" || currentString[0] === "W") {
+    console.log("Action for W");
+    cassette.switchState("unlock");
+  } 
+  if (currentString[0] === "e" || currentString[0] === "E") {
+    console.log("Action for E");
+    cassette.switchState("start");
+    cassette.switchState("manual");
   }
 } else {
   console.log("inString is null. No data received from serial port."); 
