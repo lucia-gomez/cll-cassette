@@ -3,6 +3,7 @@ let cassette;
 
 let speedSlider, inputIntervalSlider;
 let speedSliderLabel, inputIntervalSliderLabel;
+let frameButton;
 let startButton, manualButton, halfFullButton, unlockButton, concertButton;
 let lastTick = 0;
 let lastInputTick = 0;
@@ -16,19 +17,19 @@ let colorInput = [];
 let timeoutLeft, timeoutRight;
 
 function preload() {
-  img = loadImage("cassette.png");
+  img = loadImage("cassette-full.png");
 }
 
 function setup() {
   serialSetup(); // serial.js file
-  createCanvas(800, 600);
+  createCanvas(windowWidth, windowHeight);
 
   lightOff = color("#b8b8b8");
   lightOff.setAlpha(32);
   colorFinal = color("#894CE0");
   colorInput = ["#8D7EFC", "#BE94FF", "#CD6EFF", "#FFA9FF", "#FFF"];
 
-  cassette = new Cassette(90, 90, 600, 376);
+  cassette = new Cassette(width/2-300, 90, 600, 376);
 
   speedSlider = createSlider(5, 200, 80, 10);
   speedSliderLabel = createP("Speed");
@@ -41,25 +42,29 @@ function setup() {
   textAlign(LEFT, TOP);
   textSize(16);
 
+  frameButton = createButton("Toggle Frame");
+  frameButton.mousePressed(() => cassette.switchFrameDisplay());
+  frameButton.position(10, 60);
+
   manualButton = createButton("Manual");
   manualButton.mousePressed(() => cassette.switchState("manual"));
-  manualButton.position(10, 60);
+  manualButton.position(10, 90);
 
   startButton = createButton("Start");
   startButton.mousePressed(() => cassette.switchState("start"));
-  startButton.position(10, 90);
+  startButton.position(10, 120);
 
   halfFullButton = createButton("Half Full");
   halfFullButton.mousePressed(() => cassette.switchState("halfFull"));
-  halfFullButton.position(10, 120);
+  halfFullButton.position(10, 150);
 
   unlockButton = createButton("Unlock");
   unlockButton.mousePressed(() => cassette.switchState("unlock"));
-  unlockButton.position(10, 150);
+  unlockButton.position(10, 180);
 
   concertButton = createButton("Concert");
   concertButton.mousePressed(() => cassette.switchState("concert"));
-  concertButton.position(10, 180);
+  concertButton.position(10, 210);
 
   if (cassette.state === "start" || cassette.state === "halfFull") {
     scheduleInputLeft();
@@ -68,8 +73,8 @@ function setup() {
 }
 
 function draw() {
-  background(20);
-  fill("white");
+  background(255);
+  fill("black");
 
   if (cassette.state === "manual") {
     text("Press 'Q' to add joy pixels (left), 'P' to add joy pixels (right)", 10, 10);
@@ -131,13 +136,14 @@ class Cassette {
     this.w = w;
     this.h = h;
     this.state = "manual";
+    this.showFrame = true;
 
     this.borderPixels = this.generateBorderPixels();
     this.borderColors = this.borderPixels.map((_) => colorFinal);
 
-    let spoolY = y + h / 2 - 23;
-    let spoolX1 = x + 170;
-    let spoolX2 = x + 420;
+    let spoolY = y + h / 2;
+    let spoolX1 = x + 165;
+    let spoolX2 = x + 435;
     this.spoolLeft = new Spool(spoolX1, spoolY, this.y + this.h, this.state);
     this.spoolRight = new Spool(spoolX2, spoolY, this.y + this.h, this.state);
 
@@ -168,6 +174,10 @@ class Cassette {
       scheduleInputLeft();
       scheduleInputRight();
     }
+  }
+
+  switchFrameDisplay() {
+    this.showFrame = !this.showFrame;
   }
 
   addPixelsLeft(c) {
@@ -216,9 +226,10 @@ class Cassette {
       pixel.draw();
     });
 
-    fill(245);
-    tint(255, 64);
-    image(img, this.x, this.y);
+
+    if(this.showFrame){
+      image(img, this.x, this.y, this.w,this.w*img.height/img.width);
+    }
 
     this.infinityLoop.switchState(this.state);
     this.infinityLoop.draw();
@@ -252,7 +263,7 @@ class InfinityLoop {
   constructor(spoolLeftX, spoolRightX, centerY) {
     this.centerX = (spoolLeftX + spoolRightX) / 2;
     this.centerY = centerY;
-    this.width = spoolRightX - spoolLeftX;
+    this.width = (spoolRightX - spoolLeftX) *.95;
     this.state = "manual";
 
     this.numPoints = 60;
@@ -275,7 +286,7 @@ class InfinityLoop {
       let x = this.centerX + (this.width * cos(t)) / (1 + sin(t) * sin(t));
       let y =
         this.centerY +
-        (this.width * sin(t) * cos(t)) / (1 + (sin(t) * sin(t)) / 100);
+        (this.width * sin(t) * cos(t)) / (1 + (sin(t) * sin(t)) / TWO_PI);
 
       pixels.push(new Pixel(x, y));
     }
