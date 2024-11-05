@@ -154,13 +154,13 @@ class Cassette {
     this.legLeft = new Leg(
       spoolX1,
       this.y + this.h,
-      75,
+      445, // height of leg
       this.addPixelsLeft.bind(this)
     );
     this.legRight = new Leg(
       spoolX2,
       this.y + this.h,
-      75,
+      445, // height of leg
       this.addPixelsRight.bind(this)
     );
   }
