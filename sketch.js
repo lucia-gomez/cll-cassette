@@ -31,9 +31,11 @@ function setup() {
 
   cassette = new Cassette(width/2-300, 90, 600, 376);
 
-  speedSlider = createSlider(5, 200, 80, 10);
   speedSliderLabel = createP("Speed");
-  speedSliderLabel.position(140, height);
+  speedSliderLabel.position(10, height-60);
+  speedSlider = createSlider(5, 200, 80, 10);
+  speedSlider.position(50, height-60);
+ 
 
   // inputIntervalSlider = createSlider(1, 20, 5, 1);
   // inputIntervalSliderLabel = createP("Input interval");
