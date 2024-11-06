@@ -50,6 +50,7 @@ function setup() {
 
   borderButton = createButton("Toggle Border");
   borderButton.mousePressed(() => cassette.switchBorderDisplay());
+  borderButton.position(120, 60);
 
   manualButton = createButton("Manual");
   manualButton.mousePressed(() => cassette.switchState("manual"));
@@ -250,21 +251,9 @@ class Cassette {
     const p = [];
 
     let m = 12; // margin
-    // top row from left
-    for (let i = this.x + m; i < this.x + this.w - m; i += r) {
-      p.push(new Pixel(i, this.y + m));
-    }
-    // right side from top
-    for (let i = this.y + m; i < this.y + this.h - r; i += r) {
-      p.push(new Pixel(this.x + this.w - m, i));
-    }
     // bottom row from right
     for (let i = this.x + this.w - m; i > this.x + m; i -= r) {
       p.push(new Pixel(i, this.y + this.h - m));
-    }
-    // left side from bottom
-    for (let i = this.y + this.h - m; i > this.y + r; i -= r) {
-      p.push(new Pixel(this.x + m, i));
     }
     return p;
   }
