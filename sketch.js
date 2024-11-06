@@ -3,7 +3,7 @@ let cassette;
 
 let speedSlider, inputIntervalSlider;
 let speedSliderLabel, inputIntervalSliderLabel;
-let frameButton;
+let frameButton,borderButton;
 let startButton, manualButton, halfFullButton, unlockButton, concertButton;
 let lastTick = 0;
 let lastInputTick = 0;
@@ -47,6 +47,9 @@ function setup() {
   frameButton = createButton("Toggle Frame");
   frameButton.mousePressed(() => cassette.switchFrameDisplay());
   frameButton.position(10, 60);
+
+  borderButton = createButton("Toggle Border");
+  borderButton.mousePressed(() => cassette.switchBorderDisplay());
 
   manualButton = createButton("Manual");
   manualButton.mousePressed(() => cassette.switchState("manual"));
@@ -139,6 +142,7 @@ class Cassette {
     this.h = h;
     this.state = "manual";
     this.showFrame = true;
+    this.showBorder = true;
 
     this.borderPixels = this.generateBorderPixels();
     this.borderColors = this.borderPixels.map((_) => colorFinal);
@@ -182,6 +186,10 @@ class Cassette {
     this.showFrame = !this.showFrame;
   }
 
+  switchBorderDisplay() {
+    this.showBorder = !this.showBorder;
+  }
+
   addPixelsLeft(c) {
     this.spoolLeft.addPixels(c);
   }
@@ -223,12 +231,13 @@ class Cassette {
       this.switchState("unlock");
     }
 
-    this.borderPixels.forEach((pixel, i) => {
-      pixel.setColor(this.borderColors[i]);
-      pixel.draw();
-    });
-
-
+    if(this.showBorder){
+      this.borderPixels.forEach((pixel, i) => {
+        pixel.setColor(this.borderColors[i]);
+        pixel.draw();
+      });
+    }
+ 
     if(this.showFrame){
       image(img, this.x, this.y, this.w,this.w*img.height/img.width);
     }
