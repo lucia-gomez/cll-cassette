@@ -1,3 +1,7 @@
+let backgroundColor = 0;
+let textColor = 255-backgroundColor;
+
+
 let img;
 let cassette;
 
@@ -31,7 +35,9 @@ function setup() {
 
   cassette = new Cassette(width/2-300, 90, 600, 376);
 
+  
   speedSliderLabel = createP("Speed");
+  speedSliderLabel.style('color', `rgb(${textColor},${textColor},${textColor})`);
   speedSliderLabel.position(10, height-60);
   speedSlider = createSlider(5, 200, 80, 10);
   speedSlider.position(50, height-60);
@@ -80,7 +86,7 @@ function setup() {
 
 function draw() {
   background(0);
-  fill("black");
+  fill(textColor);
 
   if (cassette.state === "manual") {
     text("Press 'Q' to add joy pixels (left), 'P' to add joy pixels (right)", 10, 10);
