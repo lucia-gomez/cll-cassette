@@ -2,31 +2,27 @@
 #include <Adafruit_NeoPixel.h>
 
 extern Adafruit_NeoPixel strip;
+extern uint32_t colors[];
+extern const size_t NUM_COLORS;
 
 class Pixel {
   public:
-    int i;
-    int ringNumber;
-    uint32_t color; // RGB
+    uint8_t ringNumber;
+    uint8_t colorIdx;
 
-    // default
-    Pixel() {
-      this->i = 0;
-      this->ringNumber = 0;
-      this->color = 0x000000;
-    }
-
-    Pixel(int i, int ringNumber = 0) {
-      this->i = i;
+    Pixel(uint8_t ringNumber = 0) {
       this->ringNumber = ringNumber;
-      this->color = 0x000000;
+      this->colorIdx = 0;
     }
 
-    void setColor(uint32_t c) {
-      this->color = c;
+    void setColor(uint8_t idx) {
+      this->colorIdx = idx;
     }
 
-    void draw() {
-      strip.setPixelColor(this->i, this->color); 
+    void draw(int i) {
+      if (this->colorIdx < NUM_COLORS) {
+        uint32_t color = colors[this->colorIdx];
+        strip.setPixelColor(i, color); 
+      }
     }
 };
