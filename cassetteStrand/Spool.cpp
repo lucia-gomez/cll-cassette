@@ -1,6 +1,7 @@
 #include <sys/_stdint.h>
 #include <Arduino.h>
-#include <Adafruit_NeoPixel.h>
+// #include <Adafruit_NeoPixel.h>
+#include <FastLED.h>
 #include <math.h>
 #include "Pixel.cpp"
 
@@ -15,6 +16,7 @@ class Spool {
   public:
     Pixel pixels[LED_COUNT];
     uint8_t pixelColors[LED_COUNT];
+    CRGB (&leds)[LED_COUNT];
 
     String state;
     int pixelsCounter;
@@ -25,8 +27,7 @@ class Spool {
     int queue;
     int i;
 
-    Spool(String state) {
-      this->state = state;
+    Spool(String state, CRGB (&leds)[LED_COUNT]): state(state), leds(leds) {
       this->pixelsCounter = 0;
       this->pixelsPerCircle = 3 * PIXEL_COLOR_PER_INPUT * NUM_COLORS;
       this->maxCircles = 4;
@@ -72,7 +73,7 @@ class Spool {
       // swirling in pixels
       for (int i = 0; i < LED_COUNT; i++) {
         pixels[i].setColor(pixelColors[i]);
-        pixels[i].draw(i); 
+        pixels[i].draw(leds[i]); 
       }
 
       int filledRings = floor(this->pixelsCounter / this->pixelsPerCircle);
@@ -81,8 +82,8 @@ class Spool {
       for (int i = 0; i < LED_COUNT; ++i) {
         Pixel &pixel = pixels[i];
         if (pixel.ringNumber <= filledRings && pixel.ringNumber > 0) {
-          pixel.setColor(0);
-          pixel.draw(i);
+          pixel.setColor(1);
+          pixel.draw(leds[i]);
         } 
         // else if (pixel.ringNumber == filledRings + 1) {
         //   int opacity = map(pixelsInCurrentRing, 0, pixelsPerCircle, 0, 100);
