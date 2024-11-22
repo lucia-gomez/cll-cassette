@@ -9,7 +9,7 @@
 #define LED_COUNT   300
 
 extern uint32_t colors[];
-extern int rings[6][2];
+extern int rings[5][2];
 extern const size_t NUM_COLORS;
 
 class Spool {
@@ -26,26 +26,41 @@ class Spool {
 
     int queue;
     int i;
+    bool rotating;
+    int rotateAngle;
 
     Spool(String state, CRGB (&leds)[LED_COUNT]): state(state), leds(leds) {
-      this->pixelsCounter = 0;
       this->pixelsPerCircle = 3 * PIXEL_COLOR_PER_INPUT * NUM_COLORS;
-      this->maxCircles = 4;
+      this->pixelsCounter = 0;
+      this->maxCircles = sizeof(rings) / sizeof(rings[0]);
       this->maxPixels = this->pixelsPerCircle * this->maxCircles;
       this->i = 0;
+      this->rotating = false;
+      this->rotateAngle = 0;
 
-      int numRings = sizeof(rings) / sizeof(rings[0]);
       for (int i = 0; i < LED_COUNT; ++i) {
-        for(int ring = 0; ring < numRings; ring++) {
+        bool hasRing = false;
+        for(int ring = 0; ring < this->maxCircles; ring++) {
           if (i >= rings[ring][0] && i < rings[ring][1]) {
-            pixels[i] = Pixel(ring+1); 
+            pixels[i] = Pixel(ring+1);
+            hasRing = true;
           }
+        }
+        if (!hasRing) {
+          pixels[i] = Pixel();
         }
       }
     }
 
     void switchState(String newState) {
       this->state = newState;
+      if (newState == "unlock" || newState == "concert") {
+        this->pixelsCounter = this->maxCircles * this->pixelsPerCircle;
+      } else {
+        this->pixelsCounter = 0;
+      }
+
+      this->rotating = newState == "unlock" || newState == "concert";
     }
 
     void addPixels() {
@@ -67,13 +82,17 @@ class Spool {
       if (pixelColors[LED_COUNT - 1] != 0x0 && this->pixelsCounter < this->maxPixels) {
         this->pixelsCounter++;
       }
+
+      if(this->rotating) {
+        this->rotate();
+      }
     }
 
     void draw() {
       // swirling in pixels
       for (int i = 0; i < LED_COUNT; i++) {
         pixels[i].setColor(pixelColors[i]);
-        pixels[i].draw(leds[i]); 
+        pixels[i].draw(leds[LED_COUNT - i - 1]); 
       }
 
       int filledRings = floor(this->pixelsCounter / this->pixelsPerCircle);
@@ -84,19 +103,53 @@ class Spool {
         if (pixel.ringNumber <= filledRings && pixel.ringNumber > 0) {
           pixel.setColor(1);
           pixel.draw(leds[i]);
-        } 
-        // else if (pixel.ringNumber == filledRings + 1) {
-        //   int opacity = map(pixelsInCurrentRing, 0, pixelsPerCircle, 0, 100);
-        //   float brightnessFactor = opacity / 100;
+        } else if (pixel.ringNumber == filledRings + 1 && pixel.ringNumber > 0) {
+          int fade = map(pixelsInCurrentRing, 0, this->pixelsPerCircle, 255, 0);
+          if (fade != 255) {
+            pixel.setColor(1);
+            pixel.draw(leds[i], fade);
+          }
+        }
+      }
 
-        //   uint8_t red = ((colorFinal >> 16) & 0xFF) * brightnessFactor;
-        //   uint8_t green = ((colorFinal >> 8) & 0xFF) * brightnessFactor;
-        //   uint8_t blue = (colorFinal & 0xFF) * brightnessFactor;
+      if (this->rotating && this->state == "unlock" || this->state == "concert") {
+        for(int i = 0; i < this->maxCircles; i++) {
+          int ringStart = rings[i][0];
+          int ringEnd = rings[i][1];
+          if (i == this->maxCircles-1) { // last ring is partial
+            ringEnd *= 1.1; //1.55;
+          }
 
-        //   uint32_t dimmedColor = (red << 16) | (green << 8) | blue;
-        //   pixel.setColor(dimmedColor);
-        //   pixel.draw();
-        // }
+          int ringSize = ringEnd - ringStart;
+
+          int sliceCount = (int)(ringSize * 0.12);
+          int sliceCenter = (int)((this->rotateAngle / 360.0) * ringSize) + ringStart;
+          int startIndex = sliceCenter - sliceCount / 2;
+          int endIndex = startIndex + sliceCount;
+
+          if (startIndex < ringStart) {
+            startIndex = ringEnd - (ringStart - startIndex);
+          }
+          if (endIndex > ringEnd) {
+            endIndex = ringStart + (endIndex - ringEnd);
+          }
+
+          for (int j = ringStart; j < ringEnd; j++) {
+            // Wrap the indices around the ring
+            int wrappedJ = (j - ringStart) % ringSize + ringStart;
+
+            if (startIndex <= endIndex) {
+              if (wrappedJ >= startIndex && wrappedJ < endIndex) {
+                leds[wrappedJ] = CRGB::Black;  // Turn off LED
+              }
+            } else {
+              // Case: Slice wraps around the ring
+              if (wrappedJ >= startIndex || wrappedJ < endIndex) {
+                leds[wrappedJ] = CRGB::Black;  // Turn off LED
+              }
+            }
+          }
+        }
       }
     }
 
@@ -108,6 +161,13 @@ class Spool {
         this->pixelsCounter < maxPixels
       ) {
         this->pixelsCounter++;
+      }
+    }
+
+    void rotate() {
+      this->rotateAngle += 5;
+      if (this->rotateAngle >= 360) {
+        this->rotateAngle = 0; 
       }
     }
 

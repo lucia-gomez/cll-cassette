@@ -5,23 +5,24 @@
 #include <FastLED.h>
 #include "Cassette.cpp"
 
-#define LED_PIN_LEFT_SPOOL     32
+#define LED_PIN_LEFT_SPOOL      32
 #define LED_PIN_RIGHT_SPOOL     27
-#define LED_COUNT   300
-// #define BRIGHTNESS 50 // 0-255
+#define LED_PIN_INFINITY        33
+
+#define SPOOL_LED_COUNT         300
+#define INFINITY_LED_COUNT      150
 
 // int buttonAddPin = 15;
 int buttonState = LOW;
 int lastButtonState = LOW;
 
 // LED strips
-CRGB spoolLeftLeds[LED_COUNT];
-CRGB spoolRightLeds[LED_COUNT];
-
-// Adafruit_NeoPixel strip(LED_COUNT, LED_PIN, NEO_GRB + NEO_KHZ800);
+CRGB spoolLeftLeds[SPOOL_LED_COUNT];
+CRGB spoolRightLeds[SPOOL_LED_COUNT];
+CRGB infinityLeds[INFINITY_LED_COUNT];
 
 // Cassette model
-Cassette cassette(spoolLeftLeds, spoolRightLeds);
+Cassette cassette(spoolLeftLeds, spoolRightLeds, infinityLeds);
 
 // Incoming pixel colors;
 uint32_t colors[] = {
@@ -34,31 +35,30 @@ uint32_t colors[] = {
 };
 const size_t NUM_COLORS = sizeof(colors) / sizeof(colors[0]); 
 
-int rings[6][2] = {
-  {200, 1200},
-  {144, 200},
-  {115,144},
-  {80, 115},
-  {40, 80},
-  {0, 40},
+int rings[5][2] = {
+  {0, 36},
+  {36, 81},
+  {81, 133},
+  {133,191},
+  {191, SPOOL_LED_COUNT - 65},
 };
 
 unsigned long intervalLeft, intervalRight, timeoutLeft, timeoutRight;
 unsigned long lastTick;
 
 void setup() {
-  FastLED.addLeds<WS2812, LED_PIN_LEFT_SPOOL, GRB>(spoolLeftLeds, LED_COUNT);
-  FastLED.addLeds<WS2812, LED_PIN_RIGHT_SPOOL, GRB>(spoolRightLeds, LED_COUNT);
+  Serial.begin(115200);
 
-  FastLED.setBrightness(64);
-  // strip.setBrightness(BRIGHTNESS);
-  // strip.begin(); // INITIALIZE NeoPixel strip object (REQUIRED)
-  // strip.show();  // Turn OFF all pixels ASAP
+  FastLED.addLeds<WS2812, LED_PIN_LEFT_SPOOL, GRB>(spoolLeftLeds, SPOOL_LED_COUNT);
+  FastLED.addLeds<WS2812, LED_PIN_RIGHT_SPOOL, GRB>(spoolRightLeds, SPOOL_LED_COUNT);
+  FastLED.addLeds<WS2812, LED_PIN_INFINITY, GRB>(infinityLeds, INFINITY_LED_COUNT);
 
-  if (cassette.state == "start" || cassette.state == "halfFull") {
+  FastLED.setBrightness(255);
+
+  // if (cassette.state == "start" || cassette.state == "halfFull") {
     // scheduleInputLeft();
     // scheduleInputRight();
-  }
+  // }
 
   // pinMode(buttonAddPin, INPUT);
 }
@@ -90,8 +90,25 @@ void loop() {
   }
 
   cassette.draw();
+
+  // uint32_t testRingColors[] = {
+  //   0xff0000,
+  //   0xffff00,
+  //   0x00ff00,
+  //   0x0000ff,
+  //   0x00ffff
+  // };
+
+  // for (int i = 0; i < SPOOL_LED_COUNT; ++i) {
+  //   Serial.println(i);
+  //   // for(int ring = 0; ring < 5; ring++) {
+  //     // if (i >= rings[ring][0] && i < rings[ring][1]) {
+  //       spoolLeftLeds[i] = CRGB(testRingColors[4]);
+  //     // }
+  //   // }
+  // }
+
   FastLED.show();
-  // strip.show();
 }
 
 void scheduleInputLeft() {

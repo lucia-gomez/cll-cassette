@@ -20,10 +20,10 @@ class Pixel {
       this->colorIdx = idx;
     }
 
-    void draw(CRGB (&led)) {
+    void draw(CRGB (&led), int fade=0) {
       if (this->colorIdx < NUM_COLORS) {
         uint32_t color = colors[this->colorIdx];
-        led = CRGB(color);
+        led = CRGB(color).fadeLightBy(fade);
         // strip.setPixelColor(i, color); 
       }
     }
