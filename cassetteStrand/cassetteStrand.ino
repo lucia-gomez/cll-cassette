@@ -90,24 +90,6 @@ void loop() {
   }
 
   cassette.draw();
-
-  // uint32_t testRingColors[] = {
-  //   0xff0000,
-  //   0xffff00,
-  //   0x00ff00,
-  //   0x0000ff,
-  //   0x00ffff
-  // };
-
-  // for (int i = 0; i < SPOOL_LED_COUNT; ++i) {
-  //   Serial.println(i);
-  //   // for(int ring = 0; ring < 5; ring++) {
-  //     // if (i >= rings[ring][0] && i < rings[ring][1]) {
-  //       spoolLeftLeds[i] = CRGB(testRingColors[4]);
-  //     // }
-  //   // }
-  // }
-
   FastLED.show();
 }
 

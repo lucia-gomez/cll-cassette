@@ -153,17 +153,6 @@ class Spool {
       }
     }
 
-    void updateCircles() {
-      // Check if the last pixel in the array has reached the center of the spool
-      int maxPixels = this->pixelsPerCircle * this->maxCircles;
-      if (
-        this->pixels[LED_COUNT - 1].colorIdx > 0 &&
-        this->pixelsCounter < maxPixels
-      ) {
-        this->pixelsCounter++;
-      }
-    }
-
     void rotate() {
       this->rotateAngle += 5;
       if (this->rotateAngle >= 360) {

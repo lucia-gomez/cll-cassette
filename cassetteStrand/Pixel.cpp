@@ -1,8 +1,6 @@
 #include <Arduino.h>
 #include <FastLED.h>
-// #include <Adafruit_NeoPixel.h>
 
-// extern Adafruit_NeoPixel strip;
 extern uint32_t colors[];
 extern const size_t NUM_COLORS;
 
@@ -24,7 +22,6 @@ class Pixel {
       if (this->colorIdx < NUM_COLORS) {
         uint32_t color = colors[this->colorIdx];
         led = CRGB(color).fadeLightBy(fade);
-        // strip.setPixelColor(i, color); 
       }
     }
 };
