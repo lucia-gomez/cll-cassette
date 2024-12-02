@@ -1,10 +1,10 @@
 #include <FastLED.h>
 
-#define LED_PIN       32
+#define LED_PIN       27
 #define LED_COUNT_LEG 40
 #define NUM_LEGS      6
 
-#define PIXELS_PER_INPUT  4
+#define PIXELS_PER_INPUT  8
 
 CRGB legLeds[LED_COUNT_LEG * NUM_LEGS];
 uint32_t pixels[LED_COUNT_LEG];
@@ -54,7 +54,7 @@ void loop() {
       if (i % 2 == 0) { // strips numbered top to bottom
         newColor = pixels[j];
       } else { // strips numbered bottom to top
-        newColor = pixels[LED_COUNT_LEG - j];
+        newColor = pixels[LED_COUNT_LEG - j - 1];
       }
       legLeds[i * LED_COUNT_LEG + j] = CRGB(newColor);
     }
