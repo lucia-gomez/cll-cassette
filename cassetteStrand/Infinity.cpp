@@ -20,6 +20,9 @@ class Infinity {
 
     void switchState(String newState) {
       this->state = newState;
+      if (newState == "off") {
+        this->clear();
+      }
     }
 
     void tick() {

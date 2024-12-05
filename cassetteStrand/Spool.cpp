@@ -12,6 +12,11 @@ extern uint32_t colors[];
 extern int rings[5][2];
 extern const size_t NUM_COLORS;
 
+// 5 rings (constant)
+// 27 inputs per ring = 135 inputs
+// every 20s (avg)
+// 2700 seconds = 45min
+
 class Spool {
   public:
     Pixel pixels[LED_COUNT];
@@ -56,6 +61,9 @@ class Spool {
       this->state = newState;
       if (newState == "unlock" || newState == "concert") {
         this->pixelsCounter = this->maxCircles * this->pixelsPerCircle;
+      } else if (newState == "off") {
+        this->pixelsCounter = 0;
+        this->off();
       } else {
         this->pixelsCounter = 0;
       }
@@ -64,7 +72,9 @@ class Spool {
     }
 
     void addPixels() {
-      this->queue += NUM_COLORS * PIXEL_COLOR_PER_INPUT;
+      if (this->state == "start") {
+        this->queue += NUM_COLORS * PIXEL_COLOR_PER_INPUT;
+      }
     }
 
     void tick() {
@@ -140,12 +150,12 @@ class Spool {
 
             if (startIndex <= endIndex) {
               if (wrappedJ >= startIndex && wrappedJ < endIndex) {
-                leds[wrappedJ] = CRGB::Black;  // Turn off LED
+                leds[wrappedJ] = CRGB::Black;
               }
             } else {
               // Case: Slice wraps around the ring
               if (wrappedJ >= startIndex || wrappedJ < endIndex) {
-                leds[wrappedJ] = CRGB::Black;  // Turn off LED
+                leds[wrappedJ] = CRGB::Black;
               }
             }
           }
@@ -165,5 +175,11 @@ class Spool {
           arr[j] = arr[j - 1];
       }
       arr[0] = newValue;
+    }
+
+    void off() {
+      for (int i = 0; i < LED_COUNT; i++) {
+        leds[i] = CRGB::Black;
+      }
     }
 };

@@ -3,11 +3,13 @@
 //  #include <avr/power.h> // Required for 16 MHz Adafruit Trinket
 // #endif
 #include <FastLED.h>
+#include <esp_now.h>
+#include <WiFi.h>
 #include "Cassette.cpp"
 
-#define LED_PIN_LEFT_SPOOL      32
-#define LED_PIN_RIGHT_SPOOL     27
-#define LED_PIN_INFINITY        33
+#define LED_PIN_LEFT_SPOOL      33
+#define LED_PIN_RIGHT_SPOOL     32
+#define LED_PIN_INFINITY        27
 
 #define SPOOL_LED_COUNT         300
 #define INFINITY_LED_COUNT      150
@@ -46,6 +48,38 @@ int rings[5][2] = {
 unsigned long intervalLeft, intervalRight, timeoutLeft, timeoutRight;
 unsigned long lastTick;
 
+float inputRate;
+const float INPUT_RATE_MIN = 1.0; // ~45min duration
+const float INPUT_RATE_MAX = 10.0; // ~4.5min duration
+
+typedef struct struct_message {
+  bool on;
+  bool playing;
+  bool unlocked;
+  float rate;
+} struct_message;
+
+struct_message receivedData;
+struct_message previousData;
+
+// callback function that will be executed when data is received
+void OnDataRecv(const uint8_t * mac, const uint8_t *incomingData, int len) {
+  previousData = receivedData;
+  memcpy(&receivedData, incomingData, sizeof(receivedData));
+  // Serial.print("ON: ");
+  // Serial.println(receivedData.on);
+  // Serial.println();
+  // Serial.print("PLAYING: ");
+  // Serial.println(receivedData.playing);
+  // Serial.println();
+  // Serial.print("UNLOCKED: ");
+  // Serial.println(receivedData.unlocked);
+  // Serial.println();
+  // Serial.print("INPUT RATE: ");
+  // Serial.println(receivedData.rate);
+  // Serial.println();
+}
+
 void setup() {
   Serial.begin(115200);
 
@@ -55,21 +89,43 @@ void setup() {
 
   FastLED.setBrightness(255);
 
-  // if (cassette.state == "start" || cassette.state == "halfFull") {
-    // scheduleInputLeft();
-    // scheduleInputRight();
-  // }
+  WiFi.mode(WIFI_STA);
+  if (esp_now_init() != ESP_OK) {
+    Serial.println("Error initializing ESP-NOW");
+    return;
+  }
+  esp_now_register_recv_cb(esp_now_recv_cb_t(OnDataRecv));
 
-  // pinMode(buttonAddPin, INPUT);
+  inputRate = 10.0;
+  if (cassette.state == "start") {
+    scheduleInputLeft();
+    scheduleInputRight();
+  }
 }
 
 void loop() {
-  // int reading = digitalRead(buttonAddPin);
-  // if (reading == HIGH && lastButtonState == LOW) {
-  //   Serial.println("Button pressed!");
-  //   cassette.spoolLeft.addPixels();
-  // }
-  // lastButtonState = reading;
+  if (previousData.on != receivedData.on) {
+    if (receivedData.on) { // off -> on
+      Serial.println("State ON");
+      cassette.switchState("start");
+    } else { // on -> off
+      Serial.println("State OFF");
+      cassette.switchState("off");
+      FastLED.show();
+    }
+  }
+
+  if (cassette.state == "off" || !receivedData.playing) {
+    return; // do nothing
+  }
+
+  if (previousData.unlocked != receivedData.unlocked) {
+    if(receivedData.unlocked) { // filling up -> unlocked
+      cassette.switchState("unlock");
+    } else { // unlock -> filling up
+      cassette.switchState("start");
+    }
+  }
 
   if (millis() >= timeoutLeft && cassette.state != "manual") {
     cassette.spoolLeft.addPixels();
@@ -94,7 +150,7 @@ void loop() {
 }
 
 void scheduleInputLeft() {
-  intervalLeft = random(2000, 5000);
+  intervalLeft = random(5000, 15000);
   timeoutLeft = millis() + intervalLeft;
 }
 
