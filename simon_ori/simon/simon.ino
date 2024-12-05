@@ -9,11 +9,18 @@
 */
 
 #include "pitches.h"
+#include <FastLED.h>
+
+#define LED_PIN     27   // 数据引脚（建议使用 GPIO 26）
+#define NUM_LEDS    4    // LED 的数量
+CRGB leds[NUM_LEDS];     // 定义一个数组存储 LED 的颜色信息
+uint32_t Purple = 0x6600ff;
+uint32_t Black = 0x000000;
 
 /* Constants - define pin numbers for LEDs,
    buttons and speaker, and also the game tones: */
-const byte ledPins[] = {13,12,27,33};
-const byte buttonPins[] = {25,5,19,21};
+// const byte ledPins[] = {13,12,27,33};
+const int buttonPins[] = {25,4,19,21};
 #define SPEAKER_PIN 7
 
 #define MAX_GAME_LENGTH 100
@@ -29,8 +36,9 @@ byte gameIndex = 0;
 */
 void setup() {
   Serial.begin(9600);
-  for (byte i = 0; i < 4; i++) {
-    pinMode(ledPins[i], OUTPUT);
+  FastLED.addLeds<WS2812, LED_PIN, GRB>(leds, NUM_LEDS); 
+  for ( byte i = 0; i < 4; i++) {
+    // pinMode(ledPins[i], OUTPUT);
     pinMode(buttonPins[i], INPUT_PULLUP);
   }
   pinMode(SPEAKER_PIN, OUTPUT);
@@ -43,10 +51,12 @@ void setup() {
    Lights the given LED and plays a suitable tone
 */
 void lightLedAndPlayTone(byte ledIndex) {
-  digitalWrite(ledPins[ledIndex], HIGH);
+  leds[ledIndex] = Purple;
+  FastLED.show();  
   tone(SPEAKER_PIN, gameTones[ledIndex]);
   delay(300);
-  digitalWrite(ledPins[ledIndex], LOW);
+  leds[ledIndex] = Black;
+  FastLED.show();  
   noTone(SPEAKER_PIN);
 }
 
@@ -163,4 +173,6 @@ void loop() {
     playLevelUpSound();
     delay(300);
   }
+    
+
 }
