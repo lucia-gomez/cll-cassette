@@ -5,7 +5,7 @@
 #include "Pixel.cpp"
 
 #define PIXEL_COLOR_PER_INPUT   2
-#define LED_COUNT               300
+#define LED_COUNT               242
 #define LEG_LED_COUNT           80
 #define LEG_LED_COLUMNS         6
 
@@ -102,20 +102,23 @@ class Spool {
     }
 
     void draw() {
-      // swirling in pixels in spiral + first leg column
-      for (int i = 0; i < LED_COUNT + LEG_LED_COUNT; i++) {
-        pixels[i].setColor(pixelColors[i]);
-        pixels[i].draw(leds[LED_COUNT + LEG_LED_COUNT - i - 1]); 
+      // swirling in pixels in spiral
+      for (int i = 0; i < TOTAL_LEDS; i++) {
+        if (i < LED_COUNT) {
+          pixels[i].setColor(pixelColors[i]);
+          pixels[i].draw(leds[LED_COUNT + LEG_LED_COUNT - i - 1]); 
+        }
       }
 
+
       // moving pixels up leg columns
-      for(int i = 1; i < LEG_LED_COLUMNS; i++) {
+      for(int i = 0; i < LEG_LED_COLUMNS; i++) {
         for(int j = 0; j < LEG_LED_COUNT; j++) {
           uint8_t newColorIdx;
           if (i % 2 == 0) { // strips numbered top to bottom
-            newColorIdx = pixelColors[LED_COUNT + j];
-          } else { // strips numbered bottom to top
             newColorIdx = pixelColors[LED_COUNT + LEG_LED_COUNT - j - 1];
+          } else { // strips numbered bottom to top
+            newColorIdx = pixelColors[LED_COUNT + j];
           }
           leds[LED_COUNT + i * LEG_LED_COUNT + j] = CRGB(colors[newColorIdx]);
         }
@@ -125,7 +128,7 @@ class Spool {
       int pixelsInCurrentRing = this->pixelsCounter % this->pixelsPerCircle;
 
       // spiral
-      for (int i = 0; i < 300; ++i) {
+      for (int i = 0; i < LED_COUNT; ++i) {
         Pixel &pixel = pixels[i];
         if (pixel.ringNumber <= filledRings && pixel.ringNumber > 0) {
           pixel.setColor(1);

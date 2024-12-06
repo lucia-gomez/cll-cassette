@@ -4,8 +4,8 @@
 #include "Spool.cpp"
 #include "Infinity.cpp"
 
-// 300 for spiral + 80 * 6 for leg
-#define SPOOL_LED_COUNT   780
+// 242 for spiral + 80 * 6 for leg
+#define SPOOL_LED_COUNT   722
 #define INFINITY_LED_COUNT 150
 
 class Cassette {

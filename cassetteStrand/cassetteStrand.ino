@@ -11,7 +11,7 @@
 #define LED_PIN_RIGHT_SPOOL     32
 #define LED_PIN_INFINITY        33
 
-#define SPOOL_LED_COUNT         300
+#define SPOOL_LED_COUNT         242
 #define INFINITY_LED_COUNT      150
 #define LEG_LED_COUNT           80
 #define LEG_LED_COLUMNS         6
@@ -85,8 +85,8 @@ void OnDataRecv(const uint8_t * mac, const uint8_t *incomingData, int len) {
 void setup() {
   Serial.begin(115200);
 
-  FastLED.addLeds<WS2812, LED_PIN_LEFT_SPOOL, GRB>(spoolLeftLeds, SPOOL_LED_COUNT);
-  FastLED.addLeds<WS2812, LED_PIN_RIGHT_SPOOL, GRB>(spoolRightLeds, SPOOL_LED_COUNT);
+  FastLED.addLeds<WS2812, LED_PIN_LEFT_SPOOL, GRB>(spoolLeftLeds, SPOOL_LED_COUNT + LEG_LED_COUNT * LEG_LED_COLUMNS);
+  FastLED.addLeds<WS2812, LED_PIN_RIGHT_SPOOL, GRB>(spoolRightLeds, SPOOL_LED_COUNT + LEG_LED_COUNT * LEG_LED_COLUMNS);
   FastLED.addLeds<WS2812, LED_PIN_INFINITY, GRB>(infinityLeds, INFINITY_LED_COUNT);
 
   FastLED.setBrightness(255);
@@ -152,11 +152,40 @@ void loop() {
 }
 
 void scheduleInputLeft() {
-  intervalLeft = random(5000, 15000);
+  intervalLeft = random(2000, 5000);
   timeoutLeft = millis() + intervalLeft;
 }
 
 void scheduleInputRight() {
   intervalRight = random(5000, 15000);
   timeoutRight = millis() + intervalRight;
+}
+
+void debugLegs() {
+  for(int i = 0; i < 242; i++) {
+    spoolLeftLeds[i] = CRGB::Green;
+  }
+  for(int i = 0; i < LEG_LED_COLUMNS; i++) {
+    for(int j = 0; j < LEG_LED_COUNT; j++) {
+      int color;
+      if (i == 0) {
+        color = CRGB::Blue;
+      } else if (i == 1) {
+        color = CRGB::Cyan;
+      }
+      else if (i == 2) {
+        color = CRGB::Red;
+      }
+      else if (i == 3) {
+        color = CRGB::Pink;
+      }
+      else if (i == 4) {
+        color = CRGB::Green;
+      }
+      else if (i == 5) {
+        color = CRGB::Red;
+      }
+      spoolLeftLeds[i * LEG_LED_COUNT + 242 + j] = color;
+    }
+  }
 }
