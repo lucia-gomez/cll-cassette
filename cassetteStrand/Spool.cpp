@@ -46,7 +46,7 @@ class Spool {
       this->rotating = false;
       this->rotateAngle = 0;
 
-      for (int i = 0; i < LED_COUNT; ++i) {
+      for (int i = 0; i < LED_COUNT + LEG_LED_COUNT; i++) {
         bool hasRing = false;
         for(int ring = 0; ring < this->maxCircles; ring++) {
           if (i >= rings[ring][0] && i < rings[ring][1]) {
@@ -102,24 +102,38 @@ class Spool {
     }
 
     void draw() {
-      // swirling in pixels in spiral
-      for (int i = 0; i < TOTAL_LEDS; i++) {
-        if (i < LED_COUNT) {
-          pixels[i].setColor(pixelColors[i]);
-          pixels[i].draw(leds[LED_COUNT + LEG_LED_COUNT - i - 1]); 
-        }
+      // swirling in pixels in spiral + first leg column
+      for (int i = 0; i < LED_COUNT + LEG_LED_COUNT; i++) {
+        pixels[i].setColor(pixelColors[i]);
+        pixels[i].draw(leds[LED_COUNT + LEG_LED_COUNT - i - 1]); 
       }
 
+      // for(int i = 0; i < LEG_LED_COLUMNS; i++) {
+      //   for(int j = 0; j < LEG_LED_COUNT; j++) {
+      //     uint32_t newColor;
+      //     if (i % 2 == 0) { // strips numbered top to bottom
+      //       newColor = legPixels[j];
+      //     } else { // strips numbered bottom to top
+      //       newColor = legPixels[LEG_LED_COUNT - j - 1];
+      //     }
+      //     leds[LED_COUNT + i * LEG_LED_COUNT + j] = CRGB(newColor);
+      //   }
+      // }
+
+      // leds[LED_COUNT + LEG_LED_COUNT * 3 - 1] = colors[pixelColors[LED_COUNT + LEG_LED_COUNT - 1]];
+      // Serial.println(pixelColors[0]);
 
       // moving pixels up leg columns
-      for(int i = 0; i < LEG_LED_COLUMNS; i++) {
+      for(int i = 1; i < LEG_LED_COLUMNS; i++) {
         for(int j = 0; j < LEG_LED_COUNT; j++) {
+          uint8_t baseIndex = LEG_LED_COUNT - j - 1;
           uint8_t newColorIdx;
-          if (i % 2 == 0) { // strips numbered top to bottom
-            newColorIdx = pixelColors[LED_COUNT + LEG_LED_COUNT - j - 1];
-          } else { // strips numbered bottom to top
-            newColorIdx = pixelColors[LED_COUNT + j];
+          if (i % 2 == 0) { // Even columns (bottom-to-top)
+              newColorIdx = pixelColors[baseIndex];
+          } else { // Odd columns (top-to-bottom)
+              newColorIdx = pixelColors[LED_COUNT + LEG_LED_COUNT - baseIndex - 1];
           }
+
           leds[LED_COUNT + i * LEG_LED_COUNT + j] = CRGB(colors[newColorIdx]);
         }
       }

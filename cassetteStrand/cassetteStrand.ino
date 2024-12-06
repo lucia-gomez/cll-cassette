@@ -89,7 +89,7 @@ void setup() {
   FastLED.addLeds<WS2812, LED_PIN_RIGHT_SPOOL, GRB>(spoolRightLeds, SPOOL_LED_COUNT + LEG_LED_COUNT * LEG_LED_COLUMNS);
   FastLED.addLeds<WS2812, LED_PIN_INFINITY, GRB>(infinityLeds, INFINITY_LED_COUNT);
 
-  FastLED.setBrightness(255);
+  FastLED.setBrightness(128);
 
   // WiFi.mode(WIFI_STA);
   // if (esp_now_init() != ESP_OK) {
@@ -152,7 +152,7 @@ void loop() {
 }
 
 void scheduleInputLeft() {
-  intervalLeft = random(2000, 5000);
+  intervalLeft = random(5000, 10000);
   timeoutLeft = millis() + intervalLeft;
 }
 
