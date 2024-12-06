@@ -198,32 +198,34 @@ void updateLevelUpSound() {
    The main game loop
 */
 void loop() {
-  unsigned long now = millis();
-  if (!isGameOver) {
-    if (now - lastGameActionTime >= gameActionDelay) {
-      lastGameActionTime = now;
+  // unsigned long now = millis();
+  // if (!isGameOver) {
+  //   if (now - lastGameActionTime >= gameActionDelay) {
+  //     lastGameActionTime = now;
 
-      // Add a random color to the sequence
-      gameSequence[gameIndex] = random(0, 4);
-      gameIndex++;
-      if (gameIndex >= MAX_GAME_LENGTH) {
-        gameIndex = MAX_GAME_LENGTH - 1;
-      }
+  //     // Add a random color to the sequence
+  //     gameSequence[gameIndex] = random(0, 4);
+  //     gameIndex++;
+  //     if (gameIndex >= MAX_GAME_LENGTH) {
+  //       gameIndex = MAX_GAME_LENGTH - 1;
+  //     }
 
-      playSequence();
+  //     playSequence();
 
-      if (!checkUserSequence()) {
-        gameOver();
-        isGameOver = true;
-      } else if (gameIndex > 0) {
-        playLevelUpSound(); // start the level-up sound sequence
-      }
-    }
-  }
+  //     if (!checkUserSequence()) {
+  //       gameOver();
+  //       isGameOver = true;
+  //     } else if (gameIndex > 0) {
+  //       playLevelUpSound(); // start the level-up sound sequence
+  //     }
+  //   }
+  // }
 
-  updateLevelUpSound();
+  // updateLevelUpSound();
+  updateLegLed();
+}
 
-  // leg LEDs
+void updateLegLed() {
   if (millis() >= timeout) {
     Serial.println("ADD LEG PIXELS");
     queue += PIXELS_PER_INPUT;
@@ -253,7 +255,6 @@ void loop() {
   }
 
   FastLED.show();    
-
 }
 
 void scheduleInputLeg() {
