@@ -108,21 +108,6 @@ class Spool {
         pixels[i].draw(leds[LED_COUNT + LEG_LED_COUNT - i - 1]); 
       }
 
-      // for(int i = 0; i < LEG_LED_COLUMNS; i++) {
-      //   for(int j = 0; j < LEG_LED_COUNT; j++) {
-      //     uint32_t newColor;
-      //     if (i % 2 == 0) { // strips numbered top to bottom
-      //       newColor = legPixels[j];
-      //     } else { // strips numbered bottom to top
-      //       newColor = legPixels[LEG_LED_COUNT - j - 1];
-      //     }
-      //     leds[LED_COUNT + i * LEG_LED_COUNT + j] = CRGB(newColor);
-      //   }
-      // }
-
-      // leds[LED_COUNT + LEG_LED_COUNT * 3 - 1] = colors[pixelColors[LED_COUNT + LEG_LED_COUNT - 1]];
-      // Serial.println(pixelColors[0]);
-
       // moving pixels up leg columns
       for(int i = 1; i < LEG_LED_COLUMNS; i++) {
         for(int j = 0; j < LEG_LED_COUNT; j++) {
@@ -131,7 +116,7 @@ class Spool {
           if (i % 2 == 0) { // Even columns (bottom-to-top)
               newColorIdx = pixelColors[baseIndex];
           } else { // Odd columns (top-to-bottom)
-              newColorIdx = pixelColors[LED_COUNT + LEG_LED_COUNT - baseIndex - 1];
+              newColorIdx = pixelColors[j];
           }
 
           leds[LED_COUNT + i * LEG_LED_COUNT + j] = CRGB(colors[newColorIdx]);
