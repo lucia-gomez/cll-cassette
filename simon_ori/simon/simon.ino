@@ -13,9 +13,23 @@
 
 #define LED_PIN     27   // 数据引脚（建议使用 GPIO 26）
 #define NUM_LEDS    4    // LED 的数量
+
+#define LED_PIN_LEG       33
+#define LED_COUNT_LEG 40
+#define NUM_LEG_COLUMNS  6
+
+#define PIXELS_PER_INPUT  8
+
 CRGB leds[NUM_LEDS];     // 定义一个数组存储 LED 的颜色信息
 uint32_t Purple = 0x6600ff;
 uint32_t Black = 0x000000;
+
+CRGB legLeds[LED_COUNT_LEG * NUM_LEG_COLUMNS];
+uint32_t pixels[LED_COUNT_LEG];
+
+unsigned long interval, timeout;
+unsigned long lastTick;
+int queue = 0;
 
 /* Constants - define pin numbers for LEDs,
    buttons and speaker, and also the game tones: */
@@ -41,6 +55,9 @@ bool isGameOver = false;
 void setup() {
   Serial.begin(9600);
   FastLED.addLeds<WS2812, LED_PIN, GRB>(leds, NUM_LEDS); 
+  FastLED.addLeds<WS2812, LED_PIN_LEG, GRB>(legLeds, LED_COUNT_LEG * NUM_LEG_COLUMNS);
+  FastLED.setBrightness(255);
+
   for ( byte i = 0; i < 4; i++) {
     // pinMode(ledPins[i], OUTPUT);
     pinMode(buttonPins[i], INPUT_PULLUP);
@@ -205,4 +222,48 @@ void loop() {
   }
 
   updateLevelUpSound();
+
+  // leg LEDs
+  if (millis() >= timeout) {
+    Serial.println("ADD LEG PIXELS");
+    queue += PIXELS_PER_INPUT;
+    scheduleInputLeg();
+  }
+
+  if (millis() - lastTick >= 50) {
+    if (queue > 0) {
+      queue--;
+      unshift(pixels, LED_COUNT_LEG, Purple); // push purple pixel
+    } else {
+      unshift(pixels, LED_COUNT_LEG, Black); // push dark pixel
+    }
+    lastTick = millis();
+  }
+
+  for(int i = 0; i < NUM_LEG_COLUMNS; i++) {
+    for(int j = 0; j < LED_COUNT_LEG; j++) {
+      uint32_t newColor;
+      if (i % 2 == 0) { // strips numbered top to bottom
+        newColor = pixels[j];
+      } else { // strips numbered bottom to top
+        newColor = pixels[LED_COUNT_LEG - j - 1];
+      }
+      legLeds[i * LED_COUNT_LEG + j] = CRGB(newColor);
+    }
+  }
+
+  FastLED.show();    
+
+}
+
+void scheduleInputLeg() {
+  interval = random(2000, 5000);
+  timeout = millis() + interval;
+}
+
+void unshift(uint32_t arr[], int size, uint32_t newValue) {
+  for (int j = size - 1; j > 0; j--) {
+      arr[j] = arr[j - 1];
+  }
+  arr[0] = newValue;
 }
