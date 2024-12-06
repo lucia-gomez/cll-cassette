@@ -31,6 +31,10 @@ const int gameTones[] = { NOTE_G3, NOTE_C4, NOTE_E4, NOTE_G5};
 byte gameSequence[MAX_GAME_LENGTH] = {0};
 byte gameIndex = 0;
 
+unsigned long lastGameActionTime = 0;
+const int gameActionDelay = 300; // Delay between game actions
+bool isGameOver = false;
+
 /**
    Set up the Arduino board and initialize Serial communication
 */
@@ -132,47 +136,73 @@ bool checkUserSequence() {
   return true;
 }
 
+unsigned long lastLevelUpToneTime = 0;
+int currentLevelUpToneIndex = 0;
+bool isPlayingLevelUp = false;
+const int levelUpToneSequence[][2] = {
+    {NOTE_E4, 150},
+    {NOTE_G4, 150},
+    {NOTE_E5, 150},
+    {NOTE_C5, 150},
+    {NOTE_D5, 150},
+    {NOTE_G5, 150},
+    {0, 0} // End of sequence marker
+};
+
 /**
    Plays a hooray sound whenever the user finishes a level
 */
 void playLevelUpSound() {
-  tone(SPEAKER_PIN, NOTE_E4);
-  delay(150);
-  tone(SPEAKER_PIN, NOTE_G4);
-  delay(150);
-  tone(SPEAKER_PIN, NOTE_E5);
-  delay(150);
-  tone(SPEAKER_PIN, NOTE_C5);
-  delay(150);
-  tone(SPEAKER_PIN, NOTE_D5);
-  delay(150);
-  tone(SPEAKER_PIN, NOTE_G5);
-  delay(150);
-  noTone(SPEAKER_PIN);
+  isPlayingLevelUp = true;
+  currentLevelUpToneIndex = 0;
+  lastLevelUpToneTime = millis();
+}
+
+void updateLevelUpSound() {
+    if (!isPlayingLevelUp) return;
+
+    unsigned long now = millis();
+
+    // Check if it's time to move to the next tone
+    if (now - lastLevelUpToneTime >= levelUpToneSequence[currentLevelUpToneIndex][1]) {
+        lastLevelUpToneTime = now;
+        currentLevelUpToneIndex++;
+
+        if (levelUpToneSequence[currentLevelUpToneIndex][0] == 0) {
+            noTone(SPEAKER_PIN);
+            isPlayingLevelUp = false;
+        } else {
+            tone(SPEAKER_PIN, levelUpToneSequence[currentLevelUpToneIndex][0]);
+        }
+    }
 }
 
 /**
    The main game loop
 */
 void loop() {
-  // Add a random color to the end of the sequence
-  gameSequence[gameIndex] = random(0, 4);
-  gameIndex++;
-  if (gameIndex >= MAX_GAME_LENGTH) {
-    gameIndex = MAX_GAME_LENGTH - 1;
+  unsigned long now = millis();
+  if (!isGameOver) {
+    if (now - lastGameActionTime >= gameActionDelay) {
+      lastGameActionTime = now;
+
+      // Add a random color to the sequence
+      gameSequence[gameIndex] = random(0, 4);
+      gameIndex++;
+      if (gameIndex >= MAX_GAME_LENGTH) {
+        gameIndex = MAX_GAME_LENGTH - 1;
+      }
+
+      playSequence();
+
+      if (!checkUserSequence()) {
+        gameOver();
+        isGameOver = true;
+      } else if (gameIndex > 0) {
+        playLevelUpSound(); // start the level-up sound sequence
+      }
+    }
   }
 
-  playSequence();
-  if (!checkUserSequence()) {
-    gameOver();
-  }
-
-  delay(300);
-
-  if (gameIndex > 0) {
-    playLevelUpSound();
-    delay(300);
-  }
-    
-
+  updateLevelUpSound();
 }
