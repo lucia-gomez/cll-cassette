@@ -7,20 +7,22 @@
 #include <WiFi.h>
 #include "Cassette.cpp"
 
-#define LED_PIN_LEFT_SPOOL      33
+#define LED_PIN_LEFT_SPOOL      27
 #define LED_PIN_RIGHT_SPOOL     32
-#define LED_PIN_INFINITY        27
+#define LED_PIN_INFINITY        33
 
 #define SPOOL_LED_COUNT         300
 #define INFINITY_LED_COUNT      150
+#define LEG_LED_COUNT           80
+#define LEG_LED_COLUMNS         6
 
 // int buttonAddPin = 15;
 int buttonState = LOW;
 int lastButtonState = LOW;
 
 // LED strips
-CRGB spoolLeftLeds[SPOOL_LED_COUNT];
-CRGB spoolRightLeds[SPOOL_LED_COUNT];
+CRGB spoolLeftLeds[SPOOL_LED_COUNT + LEG_LED_COUNT * LEG_LED_COLUMNS];
+CRGB spoolRightLeds[SPOOL_LED_COUNT + LEG_LED_COUNT * LEG_LED_COLUMNS];
 CRGB infinityLeds[INFINITY_LED_COUNT];
 
 // Cassette model
@@ -89,12 +91,12 @@ void setup() {
 
   FastLED.setBrightness(255);
 
-  WiFi.mode(WIFI_STA);
-  if (esp_now_init() != ESP_OK) {
-    Serial.println("Error initializing ESP-NOW");
-    return;
-  }
-  esp_now_register_recv_cb(esp_now_recv_cb_t(OnDataRecv));
+  // WiFi.mode(WIFI_STA);
+  // if (esp_now_init() != ESP_OK) {
+  //   Serial.println("Error initializing ESP-NOW");
+  //   return;
+  // }
+  // esp_now_register_recv_cb(esp_now_recv_cb_t(OnDataRecv));
 
   inputRate = 10.0;
   if (cassette.state == "start") {
@@ -104,28 +106,28 @@ void setup() {
 }
 
 void loop() {
-  if (previousData.on != receivedData.on) {
-    if (receivedData.on) { // off -> on
-      Serial.println("State ON");
-      cassette.switchState("start");
-    } else { // on -> off
-      Serial.println("State OFF");
-      cassette.switchState("off");
-      FastLED.show();
-    }
-  }
+  // if (previousData.on != receivedData.on) {
+  //   if (receivedData.on) { // off -> on
+  //     Serial.println("State ON");
+  //     cassette.switchState("start");
+  //   } else { // on -> off
+  //     Serial.println("State OFF");
+  //     cassette.switchState("off");
+  //     FastLED.show();
+  //   }
+  // }
 
-  if (cassette.state == "off" || !receivedData.playing) {
-    return; // do nothing
-  }
+  // if (cassette.state == "off" || !receivedData.playing) {
+  //   return; // do nothing
+  // }
 
-  if (previousData.unlocked != receivedData.unlocked) {
-    if(receivedData.unlocked) { // filling up -> unlocked
-      cassette.switchState("unlock");
-    } else { // unlock -> filling up
-      cassette.switchState("start");
-    }
-  }
+  // if (previousData.unlocked != receivedData.unlocked) {
+  //   if(receivedData.unlocked) { // filling up -> unlocked
+  //     cassette.switchState("unlock");
+  //   } else { // unlock -> filling up
+  //     cassette.switchState("start");
+  //   }
+  // }
 
   if (millis() >= timeoutLeft && cassette.state != "manual") {
     cassette.spoolLeft.addPixels();
