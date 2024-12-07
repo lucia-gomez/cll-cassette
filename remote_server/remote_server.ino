@@ -43,7 +43,12 @@ bool blueButtonState = HIGH; // Blue Button State
 const int switchLedPin = 13; // Switch LED Pin
 
 unsigned long lastDebounceTime = 0;
-const unsigned long debounceDelay = 50;
+const unsigned long debounceDelay = 20;
+
+const int potPin = 15;  // Potentiometer input pin
+
+unsigned long lastPotReadTime = 0;
+const unsigned long potReadInterval = 100;  // Read every 100ms
 
 void setup() {
   WiFi.mode(WIFI_STA);
@@ -76,73 +81,112 @@ void setup() {
   digitalWrite(blkLedPin, LOW);  
   digitalWrite(blueLedPin, LOW);  
 
+  // Setup for potentiometer
+  pinMode(potPin, INPUT);
+    
   Serial.begin(9600);        
 }
 
 void loop() {
-  buttonToggle(redButtonPin);
-  buttonToggle(blueButtonPin);
-  buttonToggle(blkButtonPin);
+  handleRedButton();
+  handleBlackButton();
+  handleBlueButton();
+  handlePotentiometer();
 }
 
-void buttonToggle(int button) {
-  // Get current button reading
-  bool reading = digitalRead(button);
+void handleRedButton() {
+  bool reading = digitalRead(redButtonPin);
   
-  // Add debouncing
   if ((millis() - lastDebounceTime) > debounceDelay) {
-    // Handle each button
-    if (button == redButtonPin) {
-      if (reading != redButtonState) {
-        redButtonState = reading;
-        if (redButtonState == LOW) {  // Button is pressed
-          // Toggle red LED and state
-          digitalWrite(redLedPin, !digitalRead(redLedPin));
-          myData.on = !myData.on;
-          
-          // Reset other buttons
-          digitalWrite(blkLedPin, LOW);
-          digitalWrite(blueLedPin, LOW);
-          myData.playing = false;
-          myData.unlocked = false;
-        }
-      }
-    }
-    else if (button == blkButtonPin) {
-      if (reading != blkButtonState) {
-        blkButtonState = reading;
-        if (blkButtonState == LOW) {
-          // Toggle black LED and state
-          digitalWrite(blkLedPin, !digitalRead(blkLedPin));
-          myData.playing = !myData.playing;
-          
-          // Reset other buttons
-          digitalWrite(redLedPin, LOW);
-          digitalWrite(blueLedPin, LOW);
-          myData.on = false;
-          myData.unlocked = false;
-        }
-      }
-    }
-    else if (button == blueButtonPin) {
-      if (reading != blueButtonState) {
-        blueButtonState = reading;
-        if (blueButtonState == LOW) {
-          // Toggle blue LED and state
-          digitalWrite(blueLedPin, !digitalRead(blueLedPin));
-          myData.unlocked = !myData.unlocked;
-          
-          // Reset other buttons
-          digitalWrite(redLedPin, LOW);
-          digitalWrite(blkLedPin, LOW);
-          myData.on = false;
-          myData.playing = false;
-        }
+    if (reading != redButtonState) {
+      redButtonState = reading;
+      if (redButtonState == LOW) {
+        digitalWrite(redLedPin, !digitalRead(redLedPin));
+        myData.on = !myData.on;
+        
+        // Reset others
+        digitalWrite(blkLedPin, LOW);
+        digitalWrite(blueLedPin, LOW);
+        myData.playing = false;
+        myData.unlocked = false;
+        
+        // Send update
+        esp_now_send(broadcastAddress, (uint8_t *) &myData, sizeof(myData));
       }
     }
     lastDebounceTime = millis();
-    
-    // Send the updated data
-    esp_err_t result = esp_now_send(broadcastAddress, (uint8_t *) &myData, sizeof(myData));
   }
+}
+
+void handleBlackButton() {
+  bool reading = digitalRead(blkButtonPin);
+  
+  if ((millis() - lastDebounceTime) > debounceDelay) {
+    if (reading != blkButtonState) {
+      blkButtonState = reading;
+      if (blkButtonState == LOW) {
+        digitalWrite(blkLedPin, !digitalRead(blkLedPin));
+        myData.playing = !myData.playing;
+        
+        // Reset others
+        digitalWrite(redLedPin, LOW);
+        digitalWrite(blueLedPin, LOW);
+        myData.on = false;
+        myData.unlocked = false;
+        
+        // Send update
+        esp_now_send(broadcastAddress, (uint8_t *) &myData, sizeof(myData));
+      }
+    }
+    lastDebounceTime = millis();
+  }
+}
+
+void handleBlueButton() {
+  bool reading = digitalRead(blueButtonPin);
+  
+  if ((millis() - lastDebounceTime) > debounceDelay) {
+    if (reading != blueButtonState) {
+      blueButtonState = reading;
+      if (blueButtonState == LOW) {
+        digitalWrite(blueLedPin, !digitalRead(blueLedPin));
+        myData.unlocked = !myData.unlocked;
+        
+        // Reset others
+        digitalWrite(redLedPin, LOW);
+        digitalWrite(blkLedPin, LOW);
+        myData.on = false;
+        myData.playing = false;
+        
+        // Send update
+        esp_now_send(broadcastAddress, (uint8_t *) &myData, sizeof(myData));
+      }
+    }
+    lastDebounceTime = millis();
+  }
+}
+
+void handlePotentiometer() {
+    unsigned long currentMillis = millis();
+    
+    // Check if enough time has passed since last reading
+    if (currentMillis - lastPotReadTime >= potReadInterval) {
+        // Read the analog value
+        int potValue = analogRead(potPin);
+        
+        // Convert to a rate value (0.0 to 1.0)
+        float rate = potValue / 4095.0;
+        
+        // Update the data structure
+        myData.rate = rate;
+        
+        // Print to serial monitor
+        Serial.print("Potentiometer Value: ");
+        Serial.print(potValue);
+        Serial.print(" Rate: ");
+        Serial.println(rate, 3);
+        
+        // Update the last read time
+        lastPotReadTime = currentMillis;
+    }
 }
