@@ -70,7 +70,7 @@ void setup() {
   pinMode(blueLedPin, OUTPUT);   
 
   digitalWrite(redLedPin, LOW);  
-    digitalWrite(blkLedPin, LOW);  
+  digitalWrite(blkLedPin, LOW);  
   digitalWrite(blueLedPin, LOW);  
 
   Serial.begin(9600);        
