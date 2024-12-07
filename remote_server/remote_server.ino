@@ -1,6 +1,6 @@
 #include <esp_now.h>
 #include <WiFi.h>
-uint8_t broadcastAddress[] = {0x14, 0x2B, 0x2F, 0xAF, 0xOD, 0x18};
+uint8_t broadcastAddress[] = {0x14, 0x2B, 0x2F, 0xAF, 0x0D, 0x18};
 
 typedef struct struct_message {
   // char a[32]; different data structure 
