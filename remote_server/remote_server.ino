@@ -27,21 +27,20 @@ char macStr[18];
   Serial.println(status == ESP_NOW_SEND_SUCCESS ? "Delivery Success" : "Delivery Fail");
 }
 
-// 定义引脚
 const int redButtonPin = 19;  // Red Button Pin
 const int redLedPin = 33;     // Red LED Pin
-bool redButtonState = HIGH;
+bool redButtonState = HIGH;   // Red Button State
 
-const int blkButtonPin = 26;  // Red Button Pin
-const int blkLedPin = 27;    // Red LED Pin
-bool blkButtonState = HIGH;
+const int blkButtonPin = 26;  // Black Button Pin
+const int blkLedPin = 27;    // Black LED Pin
+bool blkButtonState = HIGH;  // Black Button State
 
 
-const int blueButtonPin = 25;  // Red Button Pin
-const int blueLedPin = 12;    // Red LED Pin
-bool blueButtonState = HIGH;
+const int blueButtonPin = 25;  // Blue Button Pin
+const int blueLedPin = 12;    // Blue LED Pin
+bool blueButtonState = HIGH; // Blue Button State
 
-const int switchLedPin = 13;
+const int switchLedPin = 13; // Switch LED Pin
 
 void setup() {
   WiFi.mode(WIFI_STA);
@@ -57,31 +56,30 @@ void setup() {
    Serial.println("Failed to add peer 1");
    return;
   }
+  
+  
   pinMode(switchLedPin, OUTPUT);
-  digitalWrite(switchLedPin, HIGH);  // 
+  digitalWrite(switchLedPin, HIGH);  // Turn on the switch LED and stay on for the duration of the program
 
-  pinMode(redButtonPin, INPUT_PULLUP);   // 
-  pinMode(blkButtonPin, INPUT_PULLUP);   // 
-  pinMode(blueButtonPin, INPUT_PULLUP);  // 
+  pinMode(redButtonPin, INPUT_PULLUP);    
+  pinMode(blkButtonPin, INPUT_PULLUP);    
+  pinMode(blueButtonPin, INPUT_PULLUP);  
 
-  pinMode(redLedPin, OUTPUT);   // 
-  pinMode(blkLedPin, OUTPUT);   // 
-  pinMode(blueLedPin, OUTPUT);  // 
+  pinMode(redLedPin, OUTPUT);   
+  pinMode(blkLedPin, OUTPUT);    
+  pinMode(blueLedPin, OUTPUT);   
 
-  digitalWrite(redLedPin, LOW);  //
-    digitalWrite(blkLedPin, LOW);  // 
-  digitalWrite(blueLedPin, LOW);  // 
+  digitalWrite(redLedPin, LOW);  
+    digitalWrite(blkLedPin, LOW);  
+  digitalWrite(blueLedPin, LOW);  
 
-  Serial.begin(9600);         // 
+  Serial.begin(9600);        
 }
 
 void loop() {
   buttonToggle(redButtonPin);
-
   buttonToggle(blueButtonPin);
   buttonToggle(blkButtonPin);
-
-  Serial.println(blkButtonState);
 }
 
 void buttonToggle(int button) {
@@ -92,9 +90,16 @@ void buttonToggle(int button) {
     if (button == redButtonPin) {
       if (reading != redButtonState) {
         redButtonState = reading;
-        if (redButtonState == LOW) {  // Button is pressed
+        if (redButtonState == LOW) { 
+          // Turn off the black and blue LEDs, and set the playing state to false
+          digitalWrite(blkLedPin, LOW);
+          digitalWrite(blueLedPin, LOW);
+          myData.playing = false;
+          myData.unlocked = false;
+
+          // Toggle states for the red LED and the data structure
           digitalWrite(redLedPin, !digitalRead(redLedPin));
-          myData.on = false; // need help from alan
+          myData.on = !myData.on;
         }
       }
     }
@@ -102,8 +107,15 @@ void buttonToggle(int button) {
       if (reading != blkButtonState) {
         blkButtonState = reading;
         if (blkButtonState == LOW) {
+          // Turn off the red and blue LEDs, and set the playing state to false
+          digitalWrite(redLedPin, LOW);
+          digitalWrite(blueLedPin, LOW);
+          myData.on = false;
+          myData.unlocked = false;
+
+          // Toggle states for the black LED and playing state
           digitalWrite(blkLedPin, !digitalRead(blkLedPin));
-          myData.playing = false; // need help from alan
+          myData.playing = !myData.playing;
         }
       }
     }
@@ -111,8 +123,15 @@ void buttonToggle(int button) {
       if (reading != blueButtonState) {
         blueButtonState = reading;
         if (blueButtonState == LOW) {
+          // Turn off the red and black LEDs, and set the playing state to false
+          digitalWrite(redLedPin, LOW);
+          digitalWrite(blkLedPin, LOW);
+          myData.on = false;
+          myData.playing = false;
+
+          // Toggle states for the blue LED and playing state
           digitalWrite(blueLedPin, !digitalRead(blueLedPin));
-          myData.unlocked = false; // need help from alan
+          myData.unlocked = !myData.unlocked;
         }
       }
     
