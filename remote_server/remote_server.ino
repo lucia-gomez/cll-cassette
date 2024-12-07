@@ -141,13 +141,13 @@ void handleBlackButton()
       if (blkButtonState == LOW)
       {
         digitalWrite(blkLedPin, !digitalRead(blkLedPin));
-        myData.playing = !myData.playing;
+        myData.unlocked = !myData.unlocked;
 
         // Reset others
         digitalWrite(redLedPin, LOW);
         digitalWrite(blueLedPin, LOW);
         myData.on = false;
-        myData.unlocked = false;
+        myData.playing = false;
 
         // Send update
         esp_now_send(broadcastAddress, (uint8_t *)&myData, sizeof(myData));
@@ -169,13 +169,13 @@ void handleBlueButton()
       if (blueButtonState == LOW)
       {
         digitalWrite(blueLedPin, !digitalRead(blueLedPin));
-        myData.unlocked = !myData.unlocked;
+        myData.playing = !myData.playing;
 
         // Reset others
         digitalWrite(redLedPin, LOW);
         digitalWrite(blkLedPin, LOW);
         myData.on = false;
-        myData.playing = false;
+        myData.unlocked = false;
 
         // Send update
         esp_now_send(broadcastAddress, (uint8_t *)&myData, sizeof(myData));
