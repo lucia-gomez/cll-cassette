@@ -4,7 +4,7 @@
 
 // REPLACE WITH YOUR RECEIVER MAC Address
 uint8_t broadcastAddress[] = {0xC4, 0xDE, 0xE2, 0x9D, 0x47, 0xA0};
-uint8_t broadcastAddress1[] = {0x14, 0x2B, 0x2F, 0xAE, 0xBE, 0x3C};
+uint8_t broadcastAddress1[] = {0x14, 0x2B, 0x2F, 0xAF, 0xOD, 0x18};
 //14:2b:2f:ae:be:3c
 // c4:de:e2:9d:47:a0 
 // Structure example to send data
@@ -13,8 +13,8 @@ typedef struct struct_message {
   // char a[32]; different data structure 
   // int b;
   // float c;
-  bool r;
-  bool b;
+  bool r;//r
+  bool b;//
   bool y;
   bool g;
 } struct_message;
