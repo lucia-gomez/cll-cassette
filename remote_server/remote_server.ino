@@ -42,6 +42,9 @@ bool blueButtonState = HIGH; // Blue Button State
 
 const int switchLedPin = 13; // Switch LED Pin
 
+unsigned long lastDebounceTime = 0;
+const unsigned long debounceDelay = 50;
+
 void setup() {
   WiFi.mode(WIFI_STA);
   if (esp_now_init() != ESP_OK) {
@@ -86,20 +89,22 @@ void buttonToggle(int button) {
   // Get current button reading
   bool reading = digitalRead(button);
   
+  // Add debouncing
+  if ((millis() - lastDebounceTime) > debounceDelay) {
     // Handle each button
     if (button == redButtonPin) {
       if (reading != redButtonState) {
         redButtonState = reading;
-        if (redButtonState == LOW) { 
-          // Turn off the black and blue LEDs, and set the playing state to false
+        if (redButtonState == LOW) {  // Button is pressed
+          // Toggle red LED and state
+          digitalWrite(redLedPin, !digitalRead(redLedPin));
+          myData.on = !myData.on;
+          
+          // Reset other buttons
           digitalWrite(blkLedPin, LOW);
           digitalWrite(blueLedPin, LOW);
           myData.playing = false;
           myData.unlocked = false;
-
-          // Toggle states for the red LED and the data structure
-          digitalWrite(redLedPin, !digitalRead(redLedPin));
-          myData.on = !myData.on;
         }
       }
     }
@@ -107,15 +112,15 @@ void buttonToggle(int button) {
       if (reading != blkButtonState) {
         blkButtonState = reading;
         if (blkButtonState == LOW) {
-          // Turn off the red and blue LEDs, and set the playing state to false
+          // Toggle black LED and state
+          digitalWrite(blkLedPin, !digitalRead(blkLedPin));
+          myData.playing = !myData.playing;
+          
+          // Reset other buttons
           digitalWrite(redLedPin, LOW);
           digitalWrite(blueLedPin, LOW);
           myData.on = false;
           myData.unlocked = false;
-
-          // Toggle states for the black LED and playing state
-          digitalWrite(blkLedPin, !digitalRead(blkLedPin));
-          myData.playing = !myData.playing;
         }
       }
     }
@@ -123,17 +128,21 @@ void buttonToggle(int button) {
       if (reading != blueButtonState) {
         blueButtonState = reading;
         if (blueButtonState == LOW) {
-          // Turn off the red and black LEDs, and set the playing state to false
+          // Toggle blue LED and state
+          digitalWrite(blueLedPin, !digitalRead(blueLedPin));
+          myData.unlocked = !myData.unlocked;
+          
+          // Reset other buttons
           digitalWrite(redLedPin, LOW);
           digitalWrite(blkLedPin, LOW);
           myData.on = false;
           myData.playing = false;
-
-          // Toggle states for the blue LED and playing state
-          digitalWrite(blueLedPin, !digitalRead(blueLedPin));
-          myData.unlocked = !myData.unlocked;
         }
       }
+    }
+    lastDebounceTime = millis();
     
+    // Send the updated data
+    esp_err_t result = esp_now_send(broadcastAddress, (uint8_t *) &myData, sizeof(myData));
   }
 }
