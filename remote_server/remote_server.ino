@@ -45,7 +45,7 @@ const int switchLedPin = 13; // Switch LED Pin
 unsigned long lastDebounceTime = 0;
 const unsigned long debounceDelay = 20;
 
-const int potPin = 15;  // Potentiometer input pin
+const int potPin = 33;  // Potentiometer input pin
 
 unsigned long lastPotReadTime = 0;
 const unsigned long potReadInterval = 100;  // Read every 100ms
