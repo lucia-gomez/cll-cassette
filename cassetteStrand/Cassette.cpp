@@ -51,9 +51,10 @@ class Cassette {
       spoolRight.draw();
       infinity.draw();
 
-      // outline is always on
-      for(int i = 0; i < OUTLINE_LED_COUNT; i++) {
-        this->outlineLeds[i] = CRGB(colors[1]); // purple
+      if (this->state != "off") {
+        for(int i = 0; i < OUTLINE_LED_COUNT; i++) {
+          this->outlineLeds[i] = CRGB(colors[1]); // purple
+        }
       }
     }
 };

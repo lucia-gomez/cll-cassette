@@ -64,25 +64,28 @@ typedef struct struct_message {
   float rate;
 } struct_message;
 
-struct_message receivedData;
-struct_message previousData;
+struct_message receivedData = {true, true, false, 0.0};
+struct_message previousData = {true, true, false, 0.0};
+bool messageReceived = false;
 
 // callback function that will be executed when data is received
 void OnDataRecv(const uint8_t * mac, const uint8_t *incomingData, int len) {
   previousData = receivedData;
   memcpy(&receivedData, incomingData, sizeof(receivedData));
-  // Serial.print("ON: ");
-  // Serial.println(receivedData.on);
-  // Serial.println();
-  // Serial.print("PLAYING: ");
-  // Serial.println(receivedData.playing);
-  // Serial.println();
-  // Serial.print("UNLOCKED: ");
-  // Serial.println(receivedData.unlocked);
-  // Serial.println();
-  // Serial.print("INPUT RATE: ");
-  // Serial.println(receivedData.rate);
-  // Serial.println();
+  messageReceived = true;
+
+  Serial.print("ON: ");
+  Serial.println(receivedData.on);
+  Serial.println();
+  Serial.print("PLAYING: ");
+  Serial.println(receivedData.playing);
+  Serial.println();
+  Serial.print("UNLOCKED: ");
+  Serial.println(receivedData.unlocked);
+  Serial.println();
+  Serial.print("INPUT RATE: ");
+  Serial.println(receivedData.rate);
+  Serial.println();
 }
 
 void setup() {
@@ -95,12 +98,12 @@ void setup() {
 
   FastLED.setBrightness(128);
 
-  // WiFi.mode(WIFI_STA);
-  // if (esp_now_init() != ESP_OK) {
-  //   Serial.println("Error initializing ESP-NOW");
-  //   return;
-  // }
-  // esp_now_register_recv_cb(esp_now_recv_cb_t(OnDataRecv));
+  WiFi.mode(WIFI_STA);
+  if (esp_now_init() != ESP_OK) {
+    Serial.println("Error initializing ESP-NOW");
+    return;
+  }
+  esp_now_register_recv_cb(esp_now_recv_cb_t(OnDataRecv));
 
   inputRate = 10.0;
   if (cassette.state == "start") {
@@ -110,20 +113,26 @@ void setup() {
 }
 
 void loop() {
-  // if (previousData.on != receivedData.on) {
-  //   if (receivedData.on) { // off -> on
-  //     Serial.println("State ON");
-  //     cassette.switchState("start");
-  //   } else { // on -> off
-  //     Serial.println("State OFF");
-  //     cassette.switchState("off");
-  //     FastLED.show();
-  //   }
-  // }
+  if (messageReceived) {
+    if (previousData.on != receivedData.on) {
+      if (receivedData.on) { // off -> on
+        Serial.println("State ON");
+        cassette.switchState("start");
+        scheduleInputLeft();
+        scheduleInputRight();
+      } else { // on -> off
+        Serial.println("State OFF");
+        cassette.switchState("off");
+        FastLED.show();
+      }
+    }
+    messageReceived = false;
+  }
 
-  // if (cassette.state == "off" || !receivedData.playing) {
-  //   return; // do nothing
-  // }
+  //  || !receivedData.playing
+  if (cassette.state == "off") {
+    return; // do nothing
+  }
 
   // if (previousData.unlocked != receivedData.unlocked) {
   //   if(receivedData.unlocked) { // filling up -> unlocked
@@ -133,13 +142,13 @@ void loop() {
   //   }
   // }
 
-  if (millis() >= timeoutLeft && cassette.state != "manual") {
+  if (millis() >= timeoutLeft) {
     cassette.spoolLeft.addPixels();
     Serial.println("LEFT");
     scheduleInputLeft();
   }
 
-  if (millis() >= timeoutRight && cassette.state != "manual") {
+  if (millis() >= timeoutRight) {
     cassette.spoolRight.addPixels();
     Serial.println("RIGHT");
     scheduleInputRight();
@@ -170,27 +179,27 @@ void debugLegs() {
     spoolLeftLeds[i] = CRGB::Green;
     spoolRightLeds[i] = CRGB::Green;
   }
-  // for(int i = 0; i < LEG_LED_COLUMNS; i++) {
-  //   for(int j = 0; j < LEG_LED_COUNT; j++) {
-  //     int color;
-  //     if (i == 0) {
-  //       color = CRGB::Blue;
-  //     } else if (i == 1) {
-  //       color = CRGB::Cyan;
-  //     }
-  //     else if (i == 2) {
-  //       color = CRGB::Red;
-  //     }
-  //     else if (i == 3) {
-  //       color = CRGB::Pink;
-  //     }
-  //     else if (i == 4) {
-  //       color = CRGB::Green;
-  //     }
-  //     else if (i == 5) {
-  //       color = CRGB::Red;
-  //     }
-  //     spoolLeftLeds[i * LEG_LED_COUNT + 242 + j] = color;
-  //   }
-  // }
+  for(int i = 0; i < LEG_LED_COLUMNS; i++) {
+    for(int j = 0; j < LEG_LED_COUNT; j++) {
+      int color;
+      if (i == 0) {
+        color = CRGB::Blue;
+      } else if (i == 1) {
+        color = CRGB::Cyan;
+      }
+      else if (i == 2) {
+        color = CRGB::Red;
+      }
+      else if (i == 3) {
+        color = CRGB::Pink;
+      }
+      else if (i == 4) {
+        color = CRGB::Green;
+      }
+      else if (i == 5) {
+        color = CRGB::Red;
+      }
+      spoolLeftLeds[i * LEG_LED_COUNT + 242 + j] = color;
+    }
+  }
 }
