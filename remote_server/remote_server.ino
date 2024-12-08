@@ -41,7 +41,9 @@ bool blueButtonState = HIGH;   // Blue Button State
 
 const int switchLedPin = 13;  // Switch LED Pin
 
-unsigned long lastDebounceTime = 0;
+unsigned long lastDebounceTimeRed = 0;
+unsigned long lastDebounceTimeBlue = 0;
+unsigned long lastDebounceTimeBlack = 0;
 const unsigned long debounceDelay = 30;
 
 const int potPin = 37;  // Potentiometer input pin
@@ -96,16 +98,18 @@ void setup() {
 }
 
 void loop() {
-  handleRedButton();
-  handleBlackButton();
   handleBlueButton();
+  handleBlackButton();
+  handleRedButton();
+  
+  
   handlePotentiometer();
 }
 
 void handleRedButton() {
   bool reading = digitalRead(redButtonPin);
 
-  if ((millis() - lastDebounceTime) > debounceDelay) {
+  if ((millis() - lastDebounceTimeRed) > debounceDelay) {
     if (reading != redButtonState) {
       redButtonState = reading;
       if (redButtonState == LOW) {
@@ -116,14 +120,14 @@ void handleRedButton() {
         esp_now_send(broadcastAddress, (uint8_t *)&myData, sizeof(myData));
       }
     }
-    lastDebounceTime = millis();
+    lastDebounceTimeRed = millis();
   }
 }
 
 void handleBlackButton() {
   bool reading = digitalRead(blkButtonPin);
 
-  if ((millis() - lastDebounceTime) > debounceDelay) {
+  if ((millis() - lastDebounceTimeBlack) > debounceDelay) {
     if (reading != blkButtonState) {
       blkButtonState = reading;
       if (blkButtonState == LOW) {
@@ -134,14 +138,14 @@ void handleBlackButton() {
         esp_now_send(broadcastAddress, (uint8_t *)&myData, sizeof(myData));
       }
     }
-    lastDebounceTime = millis();
+    lastDebounceTimeBlack = millis();
   }
 }
 
 void handleBlueButton() {
   bool reading = digitalRead(blueButtonPin);
 
-  if ((millis() - lastDebounceTime) > debounceDelay) {
+  if ((millis() - lastDebounceTimeBlue) > debounceDelay) {
     if (reading != blueButtonState) {
       blueButtonState = reading;
       if (blueButtonState == LOW) {
@@ -152,7 +156,7 @@ void handleBlueButton() {
         esp_now_send(broadcastAddress, (uint8_t *)&myData, sizeof(myData));
       }
     }
-    lastDebounceTime = millis();
+    lastDebounceTimeBlue = millis();
   }
 }
 
