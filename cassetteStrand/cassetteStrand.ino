@@ -7,14 +7,16 @@
 #include <WiFi.h>
 #include "Cassette.cpp"
 
-#define LED_PIN_LEFT_SPOOL      27
-#define LED_PIN_RIGHT_SPOOL     32
+#define LED_PIN_LEFT_SPOOL      32
+#define LED_PIN_RIGHT_SPOOL     15
 #define LED_PIN_INFINITY        33
+#define LED_PIN_OUTLINE         27
 
 #define SPOOL_LED_COUNT         242
 #define INFINITY_LED_COUNT      150
 #define LEG_LED_COUNT           80
 #define LEG_LED_COLUMNS         6
+#define OUTLINE_LED_COUNT       200 // overestimate
 
 // int buttonAddPin = 15;
 int buttonState = LOW;
@@ -24,9 +26,10 @@ int lastButtonState = LOW;
 CRGB spoolLeftLeds[SPOOL_LED_COUNT + LEG_LED_COUNT * LEG_LED_COLUMNS];
 CRGB spoolRightLeds[SPOOL_LED_COUNT + LEG_LED_COUNT * LEG_LED_COLUMNS];
 CRGB infinityLeds[INFINITY_LED_COUNT];
+CRGB outlineLeds[OUTLINE_LED_COUNT];
 
 // Cassette model
-Cassette cassette(spoolLeftLeds, spoolRightLeds, infinityLeds);
+Cassette cassette(spoolLeftLeds, spoolRightLeds, infinityLeds, outlineLeds);
 
 // Incoming pixel colors;
 uint32_t colors[] = {
@@ -44,7 +47,7 @@ int rings[5][2] = {
   {36, 81},
   {81, 133},
   {133,191},
-  {191, SPOOL_LED_COUNT - 65},
+  {191, SPOOL_LED_COUNT - 20},
 };
 
 unsigned long intervalLeft, intervalRight, timeoutLeft, timeoutRight;
@@ -88,6 +91,7 @@ void setup() {
   FastLED.addLeds<WS2812, LED_PIN_LEFT_SPOOL, GRB>(spoolLeftLeds, SPOOL_LED_COUNT + LEG_LED_COUNT * LEG_LED_COLUMNS);
   FastLED.addLeds<WS2812, LED_PIN_RIGHT_SPOOL, GRB>(spoolRightLeds, SPOOL_LED_COUNT + LEG_LED_COUNT * LEG_LED_COLUMNS);
   FastLED.addLeds<WS2812, LED_PIN_INFINITY, GRB>(infinityLeds, INFINITY_LED_COUNT);
+  FastLED.addLeds<WS2812, LED_PIN_OUTLINE, GRB>(outlineLeds, OUTLINE_LED_COUNT);
 
   FastLED.setBrightness(128);
 
@@ -164,28 +168,29 @@ void scheduleInputRight() {
 void debugLegs() {
   for(int i = 0; i < 242; i++) {
     spoolLeftLeds[i] = CRGB::Green;
+    spoolRightLeds[i] = CRGB::Green;
   }
-  for(int i = 0; i < LEG_LED_COLUMNS; i++) {
-    for(int j = 0; j < LEG_LED_COUNT; j++) {
-      int color;
-      if (i == 0) {
-        color = CRGB::Blue;
-      } else if (i == 1) {
-        color = CRGB::Cyan;
-      }
-      else if (i == 2) {
-        color = CRGB::Red;
-      }
-      else if (i == 3) {
-        color = CRGB::Pink;
-      }
-      else if (i == 4) {
-        color = CRGB::Green;
-      }
-      else if (i == 5) {
-        color = CRGB::Red;
-      }
-      spoolLeftLeds[i * LEG_LED_COUNT + 242 + j] = color;
-    }
-  }
+  // for(int i = 0; i < LEG_LED_COLUMNS; i++) {
+  //   for(int j = 0; j < LEG_LED_COUNT; j++) {
+  //     int color;
+  //     if (i == 0) {
+  //       color = CRGB::Blue;
+  //     } else if (i == 1) {
+  //       color = CRGB::Cyan;
+  //     }
+  //     else if (i == 2) {
+  //       color = CRGB::Red;
+  //     }
+  //     else if (i == 3) {
+  //       color = CRGB::Pink;
+  //     }
+  //     else if (i == 4) {
+  //       color = CRGB::Green;
+  //     }
+  //     else if (i == 5) {
+  //       color = CRGB::Red;
+  //     }
+  //     spoolLeftLeds[i * LEG_LED_COUNT + 242 + j] = color;
+  //   }
+  // }
 }
