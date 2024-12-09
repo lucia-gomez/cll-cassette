@@ -53,9 +53,17 @@ int rings[5][2] = {
 unsigned long intervalLeft, intervalRight, timeoutLeft, timeoutRight;
 unsigned long lastTick;
 
-float inputRate;
-const float INPUT_RATE_MIN = 1.0; // ~45min duration
-const float INPUT_RATE_MAX = 10.0; // ~4.5min duration
+const int INPUT_INTERVAL_MIN = 10000; // 10s
+const int INPUT_INTERVAL_MAX = 20000; // 20s
+
+const int NUM_RINGS = 5; // physically constant LED layout
+const int PRECONCERT_DURATION_MINUTES = 45;
+const int INPUT_INTERVAL_AVG_MS = (INPUT_INTERVAL_MAX + INPUT_INTERVAL_MIN) / 2000;
+
+// FORMULA FOR INPUTS PER RING
+// 5 rings * x inputs/ring * 15 seconds/input = 2700 seconds = 45 minutes
+// 45min / 5 rings / 15 seconds = x inputs (36 in this example)
+const int INPUTS_PER_RING = PRECONCERT_DURATION_MINUTES * 60 / INPUT_INTERVAL_AVG_MS / NUM_RINGS;
 
 typedef struct struct_message {
   bool on;
@@ -74,15 +82,15 @@ void OnDataRecv(const uint8_t * mac, const uint8_t *incomingData, int len) {
   memcpy(&receivedData, incomingData, sizeof(receivedData));
   messageReceived = true;
 
-  Serial.print("ON: ");
-  Serial.println(receivedData.on);
-  Serial.println();
-  Serial.print("PLAYING: ");
-  Serial.println(receivedData.playing);
-  Serial.println();
-  Serial.print("UNLOCKED: ");
-  Serial.println(receivedData.unlocked);
-  Serial.println();
+  // Serial.print("ON: ");
+  // Serial.println(receivedData.on);
+  // Serial.println();
+  // Serial.print("PLAYING: ");
+  // Serial.println(receivedData.playing);
+  // Serial.println();
+  // Serial.print("UNLOCKED: ");
+  // Serial.println(receivedData.unlocked);
+  // Serial.println();
   Serial.print("INPUT RATE: ");
   Serial.println(receivedData.rate);
   Serial.println();
@@ -105,7 +113,6 @@ void setup() {
   }
   esp_now_register_recv_cb(esp_now_recv_cb_t(OnDataRecv));
 
-  inputRate = 10.0;
   if (cassette.state == "start") {
     scheduleInputLeft();
     scheduleInputRight();
@@ -126,21 +133,35 @@ void loop() {
         FastLED.show();
       }
     }
+
+    if (previousData.unlocked != receivedData.unlocked) {
+      if(receivedData.unlocked) { // filling up -> unlocked
+        Serial.println("State UNLOCK");
+        cassette.switchState("unlock");
+      } else { // unlock -> filling up
+        Serial.println("State START");
+        cassette.switchState("start");
+      }
+    }
+
+    if (previousData.playing != receivedData.playing) {
+      if(receivedData.playing) { // paused -> playing
+        Serial.println("State PLAY");
+      } else { // playing -> paused
+        Serial.println("State PAUSE");
+      }
+    }
+
+    if (previousData.rate != receivedData.rate) {
+      cassette.setPercentFill(receivedData.rate);
+    }
+
     messageReceived = false;
   }
 
-  //  || !receivedData.playing
-  if (cassette.state == "off") {
+  if (cassette.state == "off" || !receivedData.playing) {
     return; // do nothing
   }
-
-  // if (previousData.unlocked != receivedData.unlocked) {
-  //   if(receivedData.unlocked) { // filling up -> unlocked
-  //     cassette.switchState("unlock");
-  //   } else { // unlock -> filling up
-  //     cassette.switchState("start");
-  //   }
-  // }
 
   if (millis() >= timeoutLeft) {
     cassette.spoolLeft.addPixels();
@@ -165,12 +186,12 @@ void loop() {
 }
 
 void scheduleInputLeft() {
-  intervalLeft = random(5000, 10000);
+  intervalLeft = random(INPUT_INTERVAL_MIN, INPUT_INTERVAL_MAX);
   timeoutLeft = millis() + intervalLeft;
 }
 
 void scheduleInputRight() {
-  intervalRight = random(5000, 15000);
+  intervalRight = random(INPUT_INTERVAL_MIN, INPUT_INTERVAL_MAX);
   timeoutRight = millis() + intervalRight;
 }
 

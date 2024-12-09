@@ -12,13 +12,9 @@
 extern uint32_t colors[];
 extern int rings[5][2];
 extern const size_t NUM_COLORS;
+extern const int INPUTS_PER_RING;
 
 const int TOTAL_LEDS = LED_COUNT + LEG_LED_COUNT * LEG_LED_COLUMNS;
-
-// 5 rings (constant)
-// 27 inputs per ring = 135 inputs
-// every 20s (avg)
-// 2700 seconds = 45min
 
 class Spool {
   public:
@@ -29,16 +25,15 @@ class Spool {
     String state;
     int pixelsCounter;
     int pixelsPerCircle;
-    int maxCircles;
     int maxPixels;
-
+    int maxCircles;
     int queue;
     int i;
     bool rotating;
     int rotateAngle;
 
     Spool(String state, CRGB (&leds)[TOTAL_LEDS]): state(state), leds(leds) {
-      this->pixelsPerCircle = 3 * PIXEL_COLOR_PER_INPUT * NUM_COLORS;
+      this->pixelsPerCircle = INPUTS_PER_RING * PIXEL_COLOR_PER_INPUT * NUM_COLORS;
       this->pixelsCounter = 0;
       this->maxCircles = sizeof(rings) / sizeof(rings[0]);
       this->maxPixels = this->pixelsPerCircle * this->maxCircles;
@@ -73,6 +68,10 @@ class Spool {
 
       this->rotating = newState == "unlock" || newState == "concert";
     }
+
+    void setPercentFill(float fill) {
+      this->pixelsCounter = this->maxPixels * fill;
+    } 
 
     void addPixels() {
       if (this->state == "start") {

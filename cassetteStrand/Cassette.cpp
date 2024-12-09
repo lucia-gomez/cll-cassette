@@ -57,4 +57,9 @@ class Cassette {
         }
       }
     }
+
+    void setPercentFill(float fill) {
+      spoolLeft.setPercentFill(fill);
+      spoolRight.setPercentFill(fill);
+    }
 };
