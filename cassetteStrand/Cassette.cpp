@@ -4,10 +4,10 @@
 #include "Spool.cpp"
 #include "Infinity.cpp"
 
-// 242 for spiral + 80 * 6 for leg
-#define SPOOL_LED_COUNT   722
+// 240 for spiral + 80 * 6 for leg
+#define SPOOL_LED_COUNT   720
 #define INFINITY_LED_COUNT 150
-#define OUTLINE_LED_COUNT 200
+#define OUTLINE_LED_COUNT 190
 
 extern uint32_t colors[];
 
@@ -35,6 +35,10 @@ class Cassette {
 
     void switchState(String newState) {
       this->state = newState;
+      if (newState == "off") {
+        drawOutline(false);
+      }
+
       spoolLeft.switchState(newState); 
       spoolRight.switchState(newState); 
       infinity.switchState(newState);
@@ -47,13 +51,24 @@ class Cassette {
     }
 
     void draw() {
+      if (this->state != "off") {
+        Serial.println("state is not off");
+        drawOutline(true);
+      } else {
+        drawOutline(false);
+      }
+
       spoolLeft.draw();
       spoolRight.draw();
       infinity.draw();
+    }
 
-      if (this->state != "off") {
-        for(int i = 0; i < OUTLINE_LED_COUNT; i++) {
-          this->outlineLeds[i] = CRGB(colors[1]); // purple
+    void drawOutline(bool on) {
+      for(int i = 0; i < OUTLINE_LED_COUNT; i++) {
+        if (on) {
+          this->outlineLeds[i] = CRGB::Purple;
+        } else {
+          this->outlineLeds[i] = CRGB::Black;
         }
       }
     }

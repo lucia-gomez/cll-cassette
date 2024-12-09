@@ -9,14 +9,14 @@
 
 #define LED_PIN_LEFT_SPOOL      32
 #define LED_PIN_RIGHT_SPOOL     15
-#define LED_PIN_INFINITY        33
-#define LED_PIN_OUTLINE         27
+#define LED_PIN_INFINITY        27
+#define LED_PIN_OUTLINE         33
 
-#define SPOOL_LED_COUNT         242
+#define SPOOL_LED_COUNT         240
 #define INFINITY_LED_COUNT      150
 #define LEG_LED_COUNT           80
 #define LEG_LED_COLUMNS         6
-#define OUTLINE_LED_COUNT       200 // overestimate
+#define OUTLINE_LED_COUNT       190
 
 // int buttonAddPin = 15;
 int buttonState = LOW;
@@ -112,6 +112,10 @@ void setup() {
     return;
   }
   esp_now_register_recv_cb(esp_now_recv_cb_t(OnDataRecv));
+
+  for(int i = 0; i < OUTLINE_LED_COUNT; i++) {
+    outlineLeds[i] = CRGB(colors[1]); // purple
+  }
 
   if (cassette.state == "start") {
     scheduleInputLeft();

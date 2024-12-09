@@ -5,7 +5,7 @@
 #include "Pixel.cpp"
 
 #define PIXEL_COLOR_PER_INPUT   2
-#define LED_COUNT               242
+#define LED_COUNT               240
 #define LEG_LED_COUNT           80
 #define LEG_LED_COLUMNS         6
 
